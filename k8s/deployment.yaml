@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: hr-portal
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: hr-portal
+
+  template:
+    metadata:
+      labels:
+        app: hr-portal
+
+    spec:
+      containers:
+      - name: hr-portal
+
+        image: hr-portal:latest
+
+        imagePullPolicy: IfNotPresent
+
+        ports:
+        - containerPort: 8080
