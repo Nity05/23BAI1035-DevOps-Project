@@ -2,8 +2,7 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven'
-        jdk 'JDK21'
+        maven 'Maven-3.9.16'
     }
 
     stages {
@@ -14,7 +13,7 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Build Maven Project') {
             steps {
                 bat 'mvn clean package'
             }
@@ -26,11 +25,26 @@ pipeline {
             }
         }
 
+        stage('Stop Existing Container') {
+            steps {
+                bat '''
+                docker stop hr-portal 2>nul
+                docker rm hr-portal 2>nul
+                exit /b 0
+                '''
+            }
+        }
+
         stage('Run Docker Container') {
             steps {
-                bat 'docker stop hr-portal || exit 0'
-                bat 'docker rm hr-portal || exit 0'
                 bat 'docker run -d --name hr-portal -p 8080:8080 hr-portal:latest'
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                bat 'kubectl apply -f k8s\\deployment.yaml'
+                bat 'kubectl apply -f k8s\\service.yaml'
             }
         }
     }
@@ -42,6 +56,11 @@ pipeline {
 
         failure {
             echo 'Pipeline failed.'
+        }
+
+        always {
+            bat 'kubectl get pods'
+            bat 'kubectl get svc'
         }
     }
 }
