@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Announcements</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header><h1>Announcements</h1></header>
+
+<nav>
+    <a href="/">Home</a>
+    <a href="/news">News</a>
+    <a href="/policies">Policies</a>
+    <a href="/holidays">Holidays</a>
+    <a href="/announcements">Announcements</a>
+    <a href="/contact">Contact</a>
+</nav>
+
+<main>
+    <section class="panel">
+        <div class="item" th:each="announcement : ${announcements}">
+            <h2 th:text="${announcement.title}"></h2>
+            <p th:text="${announcement.message}"></p>
+        </div>
+    </section>
+</main>
+</body>
+</html>
