@@ -1,13 +1,14 @@
 package com.example.hr_portal.service;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import com.example.hr_portal.model.Announcement;
 import com.example.hr_portal.model.Holiday;
 import com.example.hr_portal.model.NewsItem;
 import com.example.hr_portal.model.Policy;
 import com.example.hr_portal.model.SystemStatus;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class PortalService {
@@ -32,7 +33,7 @@ public class PortalService {
         return List.of(
                 new Holiday("15 August 2026", "Independence Day"),
                 new Holiday("02 October 2026", "Gandhi Jayanti"),
-                new Holiday("25 December 2026", "Christmas")
+                new Holiday("24 December 2026", "Christmas")
         );
     }
 
