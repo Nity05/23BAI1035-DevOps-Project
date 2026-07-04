@@ -18,14 +18,14 @@ spec:
 
     spec:
       hostAliases:
-        - ip: "192.168.1.7:"   # Replace with the IP returned by: ping host.docker.internal
+        - ip: "192.168.1.7"   # Replace with the IP returned by: ping host.docker.internal
           hostnames:
             - "host.docker.internal"
 
       containers:
         - name: hr-portal
           image: hr-portal:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
 
           ports:
             - containerPort: 9090

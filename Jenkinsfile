@@ -2,11 +2,14 @@ pipeline {
     agent any
 
     tools {
+        jdk 'JDK21'
         maven 'Maven-3.9.16'
     }
 
     environment {
-        KUBECONFIG = 'C:\\Users\\Nithish\\.kube\\config'
+        IMAGE_NAME = "hr-portal"
+        IMAGE_TAG = "latest"
+        KUBECONFIG = "C:\\Users\\Nithish\\.kube\\config"
     }
 
     stages {
@@ -17,51 +20,37 @@ pipeline {
             }
         }
 
-        stage('Build Maven Project') {
+        stage('Build') {
             steps {
                 bat 'mvn clean package'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Docker Build') {
             steps {
-                bat 'docker build -t hr-portal:latest .'
+                bat 'docker build -t %IMAGE_NAME%:%IMAGE_TAG% .'
             }
         }
 
-        stage('Kubernetes Debug') {
+        stage('Deploy') {
             steps {
-                bat 'echo USERPROFILE=%USERPROFILE%'
-                bat 'echo KUBECONFIG=%KUBECONFIG%'
-                bat 'kubectl config current-context'
-                bat 'kubectl cluster-info'
-            }
-        }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                bat 'kubectl apply -f k8s\\deployment.yaml --validate=false'
-                bat 'kubectl apply -f k8s\\service.yaml --validate=false'
-                bat 'kubectl rollout restart deployment hr-portal'
-            }
-        }
-
-        stage('Verify') {
-            steps {
-                bat 'kubectl get deployments'
-                bat 'kubectl get pods'
-                bat 'kubectl get svc'
+                bat 'kubectl apply -f k8s\\deployment.yaml'
+                bat 'kubectl apply -f k8s\\service.yaml'
             }
         }
     }
 
     post {
+        always {
+            echo 'Pipeline Finished.'
+        }
+
         success {
-            echo 'Pipeline completed successfully.'
+            echo 'BUILD SUCCESSFUL - HR Portal Deployed Successfully'
         }
 
         failure {
-            echo 'Pipeline failed.'
+            echo 'BUILD FAILED - Check Jenkins Console Output'
         }
     }
 }

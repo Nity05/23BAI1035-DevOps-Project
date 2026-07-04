@@ -7,10 +7,11 @@ services:
     ports:
       - "8082:80"
       - "2003:2003"
+      - "2004:2004"
       - "8125:8125/udp"
     restart: unless-stopped
     volumes:
-      - ./monitoring/graphite/storage:/opt/graphite/storage
+    - ./monitoring/graphite/storage:/opt/graphite/storage
     networks:
       - monitoring
 
