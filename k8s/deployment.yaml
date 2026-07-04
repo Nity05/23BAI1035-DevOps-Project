@@ -17,12 +17,15 @@ spec:
         app: hr-portal
 
     spec:
+      hostAliases:
+        - ip: "192.168.1.7:"   # Replace with the IP returned by: ping host.docker.internal
+          hostnames:
+            - "host.docker.internal"
+
       containers:
-      - name: hr-portal
+        - name: hr-portal
+          image: hr-portal:latest
+          imagePullPolicy: IfNotPresent
 
-        image: hr-portal:latest
-
-        imagePullPolicy: IfNotPresent
-
-        ports:
-        - containerPort: 8080
+          ports:
+            - containerPort: 9090

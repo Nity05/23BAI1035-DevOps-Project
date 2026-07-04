@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  graphite:
+    image: graphiteapp/graphite-statsd:latest
+    container_name: graphite
+    ports:
+      - "8082:80"
+      - "2003:2003"
+      - "8125:8125/udp"
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/graphite/storage:/opt/graphite/storage
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - graphite
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  nagios:
+    image: jasonrivers/nagios:latest
+    container_name: nagios
+    ports:
+      - "8083:80"
+    cap_add:
+      - NET_RAW
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/nagios:/opt/nagios/etc/conf.d
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge

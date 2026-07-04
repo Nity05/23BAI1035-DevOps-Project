@@ -8,7 +8,7 @@ WORKDIR /app
 COPY target/hr_portal-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose Spring Boot port
-EXPOSE 8080
+EXPOSE 9090
 
 # Run the application
 ENTRYPOINT ["java","-jar","app.jar"]
