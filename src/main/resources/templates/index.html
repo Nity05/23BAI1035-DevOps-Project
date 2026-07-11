@@ -160,6 +160,62 @@
         </div>
     </div>
 
+    <p class="section-heading scroll-reveal">Office Workbench</p>
+    <section class="office-workbench scroll-reveal" aria-label="Office operations workbench">
+        <div class="office-panel office-panel-wide">
+            <div class="office-panel-header">
+                <div>
+                    <span class="office-kicker">Today</span>
+                    <h2>Operations Brief</h2>
+                </div>
+                <span class="office-pill">Live shift</span>
+            </div>
+            <div class="brief-grid">
+                <div>
+                    <span class="brief-label">Priority focus</span>
+                    <strong>Watch incidents and service latency</strong>
+                </div>
+                <div>
+                    <span class="brief-label">SLA posture</span>
+                    <strong th:text="${servicesDownCount == 0 ? 'Within target' : 'Needs attention'}">Within target</strong>
+                </div>
+                <div>
+                    <span class="brief-label">Next action</span>
+                    <strong th:text="${activeAlertsCount > 0 ? 'Review incident feed' : 'Run routine checks'}">Review incident feed</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="office-panel">
+            <div class="office-panel-header">
+                <div>
+                    <span class="office-kicker">Quick Actions</span>
+                    <h2>Daily Ops</h2>
+                </div>
+            </div>
+            <div class="action-list">
+                <a href="/services">Review service health</a>
+                <a href="/incidents">Open incident feed</a>
+                <a href="/contact">Raise support request</a>
+                <a href="/actuator/health" target="_blank">Check actuator health</a>
+            </div>
+        </div>
+
+        <div class="office-panel">
+            <div class="office-panel-header">
+                <div>
+                    <span class="office-kicker">Team</span>
+                    <h2>Escalation Desk</h2>
+                </div>
+            </div>
+            <div class="team-roster">
+                <div><strong>IT Ops</strong><span>Ext 4004</span></div>
+                <div><strong>Security</strong><span>Ext 9110</span></div>
+                <div><strong>Infrastructure</strong><span>#infra-alerts</span></div>
+            </div>
+        </div>
+    </section>
+
     <!-- ── Quick Links ──────────────────────────────────── -->
     <p class="section-heading scroll-reveal" style="margin-top:8px;">🔗 Quick Access</p>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:32px;" class="scroll-reveal">

@@ -37,6 +37,51 @@
         <p>DevOps and administration support lines are active 24/7 for urgent critical outages</p>
     </div>
 
+    <section class="office-toolbar scroll-reveal" aria-label="Support request guidance">
+        <div>
+            <span class="office-kicker">Request Triage</span>
+            <strong>Choose the right support path before submitting</strong>
+        </div>
+        <div class="toolbar-actions">
+            <button type="button" class="btn btn-secondary" onclick="fillSupportTemplate('incident')">Incident Template</button>
+            <button type="button" class="btn btn-secondary" onclick="fillSupportTemplate('access')">Access Template</button>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('support-form').scrollIntoView({behavior:'smooth', block:'start'})">New Request</button>
+        </div>
+    </section>
+
+    <section class="office-workbench compact scroll-reveal" aria-label="Support service levels">
+        <div class="office-panel">
+            <div class="office-panel-header">
+                <div>
+                    <span class="office-kicker">P1</span>
+                    <h2>Critical outage</h2>
+                </div>
+                <span class="office-pill danger">15 min</span>
+            </div>
+            <p class="office-copy">Service unavailable, security incident, or business-wide blocker.</p>
+        </div>
+        <div class="office-panel">
+            <div class="office-panel-header">
+                <div>
+                    <span class="office-kicker">P2</span>
+                    <h2>Business impact</h2>
+                </div>
+                <span class="office-pill warn">1 hr</span>
+            </div>
+            <p class="office-copy">A team or workflow is degraded but a workaround exists.</p>
+        </div>
+        <div class="office-panel">
+            <div class="office-panel-header">
+                <div>
+                    <span class="office-kicker">P3</span>
+                    <h2>General request</h2>
+                </div>
+                <span class="office-pill">1 day</span>
+            </div>
+            <p class="office-copy">Routine HR, access, infrastructure, or information request.</p>
+        </div>
+    </section>
+
     <!-- Office Hours Live Indicator -->
     <div id="hours-banner" class="panel scroll-reveal"
          style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:16px 24px;margin-bottom:24px;">
@@ -229,6 +274,26 @@
             btn.textContent = '✅ Copied!';
             setTimeout(function () { btn.textContent = old; }, 1600);
         });
+    };
+
+    window.fillSupportTemplate = function (type) {
+        var category = document.getElementById('form-category');
+        var message = document.getElementById('form-msg');
+        var charCount = document.getElementById('char-count');
+        if (!category || !message) return;
+
+        if (type === 'incident') {
+            category.value = 'incident';
+            message.value = 'Priority: P1/P2\nAffected service:\nBusiness impact:\nUsers affected:\nSteps already tried:\nRequired help:';
+        } else {
+            category.value = 'security';
+            message.value = 'Access required for:\nApplication/system:\nBusiness reason:\nManager approval:\nRequired by:';
+        }
+
+        if (charCount) {
+            charCount.textContent = message.value.length + ' / 500';
+        }
+        message.focus();
     };
 
     // ── Character Counter ──────────────────────────────────

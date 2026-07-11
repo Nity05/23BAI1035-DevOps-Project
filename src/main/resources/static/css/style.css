@@ -1254,3 +1254,278 @@ footer span {
     color: #1a1a1a !important;
   }
 }
+
+/* =============================================================
+   Professional office UI refinement layer
+   ============================================================= */
+
+:root {
+  --clr-bg: #0b111d;
+  --clr-bg-2: #111827;
+  --clr-surface: rgba(255, 255, 255, 0.045);
+  --clr-surface-hover: rgba(255, 255, 255, 0.075);
+  --clr-border: rgba(148, 163, 184, 0.16);
+  --clr-border-hover: rgba(96, 165, 250, 0.35);
+  --clr-accent: #2563eb;
+  --clr-accent-2: #14b8a6;
+  --clr-accent-glow: rgba(37, 99, 235, 0.22);
+  --grad-header: linear-gradient(135deg, #111827 0%, #0f172a 55%, #10233f 100%);
+  --grad-accent: linear-gradient(135deg, #2563eb, #14b8a6);
+  --grad-card: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025));
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+}
+
+body::before {
+  background:
+    linear-gradient(rgba(148, 163, 184, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+header {
+  padding: 34px 32px 30px;
+  text-align: left;
+}
+
+.header-inner,
+main {
+  max-width: 1240px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+header h1 {
+  font-size: clamp(1.9rem, 3vw, 2.55rem);
+  letter-spacing: 0;
+}
+
+header p {
+  margin-left: 0;
+  max-width: 720px;
+}
+
+.header-clock,
+.header-badge {
+  border-radius: 8px;
+}
+
+nav {
+  justify-content: flex-start;
+  padding: 0 max(24px, calc((100vw - 1240px) / 2));
+}
+
+nav a {
+  border-radius: 0;
+  padding: 13px 16px;
+}
+
+main {
+  width: min(94%, 1240px);
+  margin-top: 28px;
+}
+
+.card,
+.panel,
+.contact-card,
+.announcement-card,
+.quick-link-card,
+.policy-card {
+  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.18);
+}
+
+.card:hover,
+.contact-card:hover,
+.quick-link-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px rgba(2, 6, 23, 0.28);
+}
+
+.card h2,
+.contact-card h3,
+.section-heading,
+th {
+  letter-spacing: 0.04em;
+}
+
+.status-badge {
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+.btn {
+  border-radius: 7px;
+  min-height: 36px;
+}
+
+.btn-primary {
+  background: var(--grad-accent);
+}
+
+.office-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.8fr) minmax(260px, 0.8fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.office-workbench.compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.office-panel {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid var(--clr-border);
+  border-radius: 12px;
+  padding: 18px;
+}
+
+.office-panel-wide {
+  grid-column: span 1;
+}
+
+.office-panel-header,
+.office-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.office-panel h2,
+.office-toolbar strong {
+  color: var(--clr-text);
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.office-kicker {
+  display: block;
+  color: var(--clr-text-faint);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.office-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 9px;
+  border: 1px solid rgba(20, 184, 166, 0.28);
+  border-radius: 7px;
+  background: rgba(20, 184, 166, 0.10);
+  color: #5eead4;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.office-pill.warn {
+  border-color: rgba(245, 158, 11, 0.32);
+  background: rgba(245, 158, 11, 0.10);
+  color: #fbbf24;
+}
+
+.office-pill.danger {
+  border-color: rgba(239, 68, 68, 0.32);
+  background: rgba(239, 68, 68, 0.10);
+  color: #f87171;
+}
+
+.brief-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.brief-grid div,
+.team-roster div {
+  border: 1px solid var(--clr-border);
+  border-radius: 9px;
+  background: rgba(255,255,255,0.025);
+  padding: 12px;
+}
+
+.brief-label {
+  display: block;
+  color: var(--clr-text-faint);
+  font-size: 0.74rem;
+  margin-bottom: 5px;
+}
+
+.brief-grid strong,
+.team-roster strong {
+  color: var(--clr-text);
+  font-size: 0.88rem;
+}
+
+.action-list,
+.team-roster {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.action-list a {
+  color: var(--clr-text);
+  text-decoration: none;
+  border: 1px solid var(--clr-border);
+  border-radius: 8px;
+  padding: 9px 10px;
+  background: rgba(255,255,255,0.025);
+  font-size: 0.86rem;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.action-list a:hover {
+  background: var(--clr-surface-hover);
+  border-color: var(--clr-border-hover);
+}
+
+.team-roster span,
+.office-copy {
+  display: block;
+  color: var(--clr-text-muted);
+  font-size: 0.82rem;
+  margin-top: 4px;
+}
+
+.office-toolbar {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid var(--clr-border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 22px;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 980px) {
+  .office-workbench,
+  .office-workbench.compact {
+    grid-template-columns: 1fr;
+  }
+
+  .brief-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .office-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .toolbar-actions {
+    justify-content: flex-start;
+  }
+}

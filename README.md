@@ -15,6 +15,7 @@ This project demonstrates end-to-end DevOps capability:
 
 - Java 21 + Spring Boot 3.5.4 application
 - Server-side rendered UI with Thymeleaf
+- Professional office-style frontend with operations workbench, support triage, and metric action shortcuts
 - Live CPU, memory, and request metrics calculated from JVM MXBeans and a servlet filter
 - Support form submissions are captured in the backend with a point-in-time metrics snapshot
 - Real-time service socket health checks on startup of each page load
@@ -47,6 +48,47 @@ This project demonstrates end-to-end DevOps capability:
 ## 3. Complete Architecture and Runtime Flow
 
 Graphite and Nagios are not frontend data sources. The Thymeleaf frontend is rendered by Spring Boot, while Graphite/Grafana and Nagios run beside the app as external observability systems.
+
+```mermaid
+flowchart LR
+  Browser[Browser]
+
+  subgraph App[HR Portal Application]
+    Controller[HomeController]
+    Service[PortalService]
+    Filter[MetricTrackingFilter]
+    Templates[Thymeleaf templates]
+    Models[Domain models]
+  end
+
+  subgraph Observability[Observability Stack]
+    Micrometer[Micrometer MeterRegistry]
+    Graphite[Graphite :2003 / :8082]
+    Grafana[Grafana :3000]
+    Nagios[Nagios :8083]
+  end
+
+  subgraph Platform[Delivery Platform]
+    Docker[Docker Compose]
+    Kubernetes[Kubernetes]
+    Jenkins[Jenkins]
+  end
+
+  Browser -->|HTTP requests| Controller
+  Controller --> Service
+  Controller --> Templates
+  Service --> Models
+  Filter --> Service
+  Service -->|live metrics| Micrometer
+  Micrometer -->|push every 10s| Graphite
+  Graphite --> Grafana
+  Nagios -->|check_http /actuator/health| Controller
+
+  Jenkins --> Docker
+  Jenkins --> Kubernetes
+  Docker --> App
+  Kubernetes --> App
+```
 
 ```text
 Browser
@@ -254,11 +296,13 @@ Current storage note: submitted support requests are retained in backend memory 
 | Route | Description |
 |---|---|
 | `/` | Home dashboard: system status overview, KPI cards, and live stats bar |
+| `/` Office Workbench | Daily operations brief, quick actions, and escalation desk |
 | `/services` | Real-time service health table with socket latency probes |
 | `/dashboard` | Live JVM metrics: CPU, memory, request rate, response time, and pod count |
+| `/dashboard` Actions | Shortcuts to Actuator metrics, Graphite, Grafana, and printable report |
 | `/maintenance` | Scheduled maintenance windows |
 | `/incidents` | Operations incident feed |
-| `/contact` | Support directory and support request form; submissions are saved in backend memory with current metrics |
+| `/contact` | Support directory, request triage, reusable ticket templates, and backend metric-snapshot submission |
 | `/actuator` | Spring Boot actuator base path |
 | `/actuator/health` | Health endpoint monitored by Nagios |
 | `/actuator/metrics` | List of Micrometer metric names |

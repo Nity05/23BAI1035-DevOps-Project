@@ -37,6 +37,19 @@
         <p>Live resource consumption and application telemetry (Graphite/Grafana Mock)</p>
     </div>
 
+    <section class="office-toolbar scroll-reveal" aria-label="Metric dashboard actions">
+        <div>
+            <span class="office-kicker">Telemetry</span>
+            <strong>Operational metrics workspace</strong>
+        </div>
+        <div class="toolbar-actions">
+            <a href="/actuator/metrics" target="_blank" class="btn btn-secondary">Actuator Metrics</a>
+            <a href="http://localhost:8082" target="_blank" class="btn btn-secondary">Graphite</a>
+            <a href="http://localhost:3000" target="_blank" class="btn btn-secondary">Grafana</a>
+            <button type="button" class="btn btn-primary" onclick="window.print()">Print Report</button>
+        </div>
+    </section>
+
     <!-- Metrics Cards Grid -->
     <section class="grid" aria-label="System Metrics" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
         <div th:each="metric : ${metrics}" class="card scroll-reveal" style="display:flex; flex-direction:column; justify-content:space-between; min-height: 160px;">
