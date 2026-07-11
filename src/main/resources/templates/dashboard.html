@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Metrics Dashboard — Real-time performance metrics and infrastructure status">
+    <title>Metrics Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- Theme Toggle -->
+<button id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode"
+        style="position:fixed;top:14px;right:72px;z-index:9998;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">🌙</button>
+
+<header>
+    <div class="header-inner">
+        <div class="header-badge">📊 Live Metrics</div>
+        <h1>Infrastructure Metrics</h1>
+        <p>Real-time resource usage, traffic volume, and response latency statistics</p>
+        <div class="header-clock" id="hr-clock">Loading…</div>
+    </div>
+</header>
+
+<nav>
+    <a href="/">🏠 Home</a>
+    <a href="/services">🖥️ Services</a>
+    <a href="/dashboard">📊 Dashboard</a>
+    <a href="/maintenance">🔧 Maintenance</a>
+    <a href="/incidents">🚨 Incidents</a>
+    <a href="/contact">📞 Contact</a>
+</nav>
+
+<main>
+    <div class="page-title scroll-reveal">
+        <h2>📊 Metrics Dashboard</h2>
+        <p>Live resource consumption and application telemetry (Graphite/Grafana Mock)</p>
+    </div>
+
+    <!-- Metrics Cards Grid -->
+    <section class="grid" aria-label="System Metrics" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+        <div th:each="metric : ${metrics}" class="card scroll-reveal" style="display:flex; flex-direction:column; justify-content:space-between; min-height: 160px;">
+            <div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+                    <div class="card-icon" style="margin-bottom:0;" th:text="${metric.icon}">💻</div>
+                    <span class="status-badge up" th:text="${metric.status}" style="font-size:0.7rem; padding: 1px 6px;">Healthy</span>
+                </div>
+                <h2 th:text="${metric.name}">CPU Usage</h2>
+            </div>
+            <div style="margin-top: 14px;">
+                <div style="font-size: 2.2rem; font-weight: 800; color: #fff; line-height: 1.1; background: linear-gradient(135deg, #e2e8f0, #93c5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;" th:text="${metric.value}">64%</div>
+                <p style="font-size: 0.78rem; color: var(--clr-text-faint); margin-top: 4px;">Updated 10 seconds ago</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Additional Graph Section (Mock visual placeholder using existing CSS variables) -->
+    <section class="panel scroll-reveal" style="margin-top: 24px;">
+        <h2><span class="panel-icon">📈</span> Metrics Integration Note</h2>
+        <p style="font-size: 0.9rem; color: var(--clr-text-muted); line-height: 1.6;">
+            These values are currently hardcoded for visualization. In the next phase of deployment, this dashboard will query the local 
+            <strong>Graphite</strong> server and render telemetry directly inside the interface using embedded <strong>Grafana</strong> charts.
+        </p>
+        <div style="margin-top: 16px; padding: 12px; border: 1px dashed rgba(255,255,255,0.12); border-radius: 8px; background: rgba(255,255,255,0.01); font-family: monospace; font-size: 0.8rem; color: var(--clr-text-muted);">
+            Graphite Target: <span style="color: #93c5fd;">graphite:2003</span><br>
+            Actuator Path: <span style="color: #93c5fd;">/actuator/metrics</span>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <p>© 2026 <span>Operations Observability Portal</span> · Built with Spring Boot + Thymeleaf · DevOps: Jenkins → Docker → Kubernetes</p>
+</footer>
+
+<script src="/js/script.js"></script>
+<script>
+(function () {
+    // ── Theme Toggle ───────────────────────────────
+    var savedTheme = localStorage.getItem('hr-theme') || 'dark';
+    if (savedTheme === 'light') applyLightTheme();
+    window.toggleTheme = function () {
+        savedTheme = savedTheme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('hr-theme', savedTheme);
+        savedTheme === 'light' ? applyLightTheme() : applyDarkTheme();
+    };
+    function applyLightTheme() {
+        document.documentElement.style.setProperty('--clr-bg',       '#f0f4f8');
+        document.documentElement.style.setProperty('--clr-bg-2',     '#ffffff');
+        document.documentElement.style.setProperty('--clr-surface',  'rgba(0,0,0,0.03)');
+        document.documentElement.style.setProperty('--clr-surface-hover', 'rgba(0,0,0,0.06)');
+        document.documentElement.style.setProperty('--clr-border',   'rgba(0,0,0,0.1)');
+        document.documentElement.style.setProperty('--clr-border-hover', 'rgba(59,130,246,0.4)');
+        document.documentElement.style.setProperty('--clr-text',     '#1e293b');
+        document.documentElement.style.setProperty('--clr-text-muted','#475569');
+        document.documentElement.style.setProperty('--clr-text-faint','#94a3b8');
+        document.getElementById('theme-toggle').textContent = '☀️';
+    }
+    function applyDarkTheme() {
+        document.documentElement.style.setProperty('--clr-bg',       '#0a0e1a');
+        document.documentElement.style.setProperty('--clr-bg-2',     '#0f1526');
+        document.documentElement.style.setProperty('--clr-surface',  'rgba(255,255,255,0.04)');
+        document.documentElement.style.setProperty('--clr-surface-hover', 'rgba(255,255,255,0.08)');
+        document.documentElement.style.setProperty('--clr-border',   'rgba(255,255,255,0.08)');
+        document.documentElement.style.setProperty('--clr-border-hover', 'rgba(99,179,237,0.4)');
+        document.documentElement.style.setProperty('--clr-text',     '#e2e8f0');
+        document.documentElement.style.setProperty('--clr-text-muted','#94a3b8');
+        document.documentElement.style.setProperty('--clr-text-faint','#475569');
+        document.getElementById('theme-toggle').textContent = '🌙';
+    }
+})();
+</script>
+</body>
+</html>

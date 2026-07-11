@@ -1,7 +1,7 @@
 package com.example.hr_portal.config;
 
 import java.time.Duration;
-
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,6 +12,23 @@ import io.micrometer.graphite.GraphiteProtocol;
 
 @Configuration
 public class GraphiteConfiguration {
+
+    @Value("${management.metrics.export.graphite.host:graphite}")
+    private String graphiteHost;
+
+    @Value("${management.metrics.export.graphite.port:2003}")
+    private int graphitePort;
+
+    private String resolveHost() {
+        try {
+            java.net.InetAddress.getByName(graphiteHost);
+            return graphiteHost;
+        } catch (java.net.UnknownHostException e) {
+            // If the application is run locally outside of docker network, "graphite" cannot be resolved.
+            // Fall back to "localhost" to route metrics to Docker exposed port 2003 on host machine.
+            return "localhost";
+        }
+    }
 
     @Bean
     public GraphiteMeterRegistry graphiteMeterRegistry() {
@@ -25,12 +42,12 @@ public class GraphiteConfiguration {
 
             @Override
             public String host() {
-                return "graphite";
+                return resolveHost();
             }
 
             @Override
             public int port() {
-                return 2003;
+                return graphitePort;
             }
 
             @Override

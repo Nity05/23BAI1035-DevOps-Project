@@ -2,28 +2,257 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Contact HR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Contact Operations &amp; Support — Get in touch with IT Support, Infrastructure, Security and HR teams">
+    <title>Contact Directory</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-<header><h1>Contact HR Department</h1></header>
+
+<!-- Theme Toggle -->
+<button id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode"
+        style="position:fixed;top:14px;right:72px;z-index:9998;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">🌙</button>
+
+<header>
+    <div class="header-inner">
+        <div class="header-badge">📞 Contacts Directory</div>
+        <h1>Contact Support &amp; IT Teams</h1>
+        <p>Get in touch with the respective teams for infrastructure issues, access control, or administrative queries</p>
+        <div class="header-clock" id="hr-clock">Loading…</div>
+    </div>
+</header>
 
 <nav>
-    <a href="/">Home</a>
-    <a href="/news">News</a>
-    <a href="/policies">Policies</a>
-    <a href="/holidays">Holidays</a>
-    <a href="/announcements">Announcements</a>
-    <a href="/contact">Contact</a>
+    <a href="/">🏠 Home</a>
+    <a href="/services">🖥️ Services</a>
+    <a href="/dashboard">📊 Dashboard</a>
+    <a href="/maintenance">🔧 Maintenance</a>
+    <a href="/incidents">🚨 Incidents</a>
+    <a href="/contact">📞 Contact</a>
 </nav>
 
 <main>
-    <section class="panel">
-        <h2>HR Helpdesk</h2>
-        <p>Email: hr@company.com</p>
-        <p>Phone: +91 98765 43210</p>
-        <p>Working Hours: Monday to Friday, 9 AM to 6 PM</p>
+    <div class="page-title scroll-reveal">
+        <h2>📞 Support Directories</h2>
+        <p>DevOps and administration support lines are active 24/7 for urgent critical outages</p>
+    </div>
+
+    <!-- Office Hours Live Indicator -->
+    <div id="hours-banner" class="panel scroll-reveal"
+         style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:16px 24px;margin-bottom:24px;">
+         <div style="display:flex;align-items:center;gap:10px;">
+             <span id="hours-dot" style="width:10px;height:10px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981;display:inline-block;"></span>
+             <span id="hours-text" style="font-weight:600;font-size:0.9rem;color:#e2e8f0;">Checking support desk hours…</span>
+         </div>
+         <span id="hours-time" style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:#64748b;"></span>
+    </div>
+
+    <!-- Contact Cards Grid -->
+    <div class="contact-grid scroll-reveal">
+        <!-- IT Support Team -->
+        <div class="contact-card">
+            <div class="contact-card-icon">🖥️</div>
+            <h3>IT Support Team</h3>
+            <p>itsupport@company.com</p>
+            <small>Internal Ext: 4004</small><br>
+            <a href="mailto:itsupport@company.com" class="btn btn-primary" id="email-btn">✉️ Open Ticket</a>
+            <button class="btn btn-secondary" onclick="copyContact('itsupport@company.com','it-copy-btn')" id="it-copy-btn" style="margin-left:4px;">📋 Copy</button>
+        </div>
+
+        <!-- Infrastructure Team -->
+        <div class="contact-card">
+            <div class="contact-card-icon" style="background:linear-gradient(135deg,#10b981,#3b82f6);">⚙️</div>
+            <h3>Infrastructure Team</h3>
+            <p>infra-ops@company.com</p>
+            <small>Slack: #infra-alerts</small><br>
+            <a href="mailto:infra-ops@company.com" class="btn btn-primary" style="background:linear-gradient(135deg,#10b981,#3b82f6);box-shadow:0 2px 12px rgba(16,185,129,0.35);">✉️ Send Alert</a>
+            <button class="btn btn-secondary" onclick="copyContact('infra-ops@company.com','infra-copy-btn')" id="infra-copy-btn" style="margin-left:4px;">📋 Copy</button>
+        </div>
+
+        <!-- Security Team -->
+        <div class="contact-card">
+            <div class="contact-card-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444);">🚨</div>
+            <h3>Security Team</h3>
+            <p>security@company.com</p>
+            <small>Hotline Ext: 9110 (24/7)</small><br>
+            <a href="tel:+918765432109" class="btn btn-primary" style="background:linear-gradient(135deg,#f59e0b,#ef4444);box-shadow:0 2px 12px rgba(239,68,68,0.35);">🚨 Report Incident</a>
+        </div>
+
+        <!-- HR Team -->
+        <div class="contact-card">
+            <div class="contact-card-icon" style="background:linear-gradient(135deg,#8b5cf6,#ec4899);">🏢</div>
+            <h3>HR Team</h3>
+            <p>hr@company.com</p>
+            <small>Phone: +91 98765 43210</small><br>
+            <button class="btn btn-secondary" onclick="copyContact('hr@company.com','hr-copy-btn')" id="hr-copy-btn" style="margin-top:14px;">📋 Copy Email</button>
+        </div>
+    </div>
+
+    <!-- Support Request Form (POSTs to Spring Boot backend) -->
+    <section class="panel scroll-reveal" aria-label="Send a Message">
+        <h2><span class="panel-icon">💬</span> Send Support / Operations a Message</h2>
+
+        <!-- Server-side success banner (from redirect flash attribute) -->
+        <div th:if="${formSuccess}" style="margin-bottom:16px;padding:14px 18px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);border-radius:10px;color:#34d399;font-size:0.9rem;font-weight:500;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:1.2rem;">✅</span>
+            <span th:text="${formSuccess}">Message sent successfully!</span>
+        </div>
+
+        <!-- Server-side error banner -->
+        <div th:if="${formError}" style="margin-bottom:16px;padding:14px 18px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:10px;color:#f87171;font-size:0.9rem;font-weight:500;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:1.2rem;">⚠️</span>
+            <span th:text="${formError}">Please fill all required fields.</span>
+        </div>
+
+        <!-- Real Thymeleaf form — POSTs to @PostMapping("/contact") -->
+        <form id="support-form" th:action="@{/contact}" th:object="${supportRequest}" method="post">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                <div>
+                    <label style="display:block;font-size:0.8rem;font-weight:600;color:#94a3b8;margin-bottom:6px;" for="form-name">Your Name *</label>
+                    <input type="text" id="form-name" th:field="*{name}" placeholder="John Doe"
+                           style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 14px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:0.875rem;outline:none;transition:border-color 0.2s;"
+                           onfocus="this.style.borderColor='rgba(59,130,246,0.5)'"
+                           onblur="this.style.borderColor='rgba(255,255,255,0.08)'">
+                </div>
+                <div>
+                    <label style="display:block;font-size:0.8rem;font-weight:600;color:#94a3b8;margin-bottom:6px;" for="form-email">Your Email *</label>
+                    <input type="email" id="form-email" th:field="*{email}" placeholder="you@company.com"
+                           style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 14px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:0.875rem;outline:none;transition:border-color 0.2s;"
+                           onfocus="this.style.borderColor='rgba(59,130,246,0.5)'"
+                           onblur="this.style.borderColor='rgba(255,255,255,0.08)'">
+                </div>
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block;font-size:0.8rem;font-weight:600;color:#94a3b8;margin-bottom:6px;" for="form-category">Category</label>
+                <select id="form-category" th:field="*{category}"
+                        style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 14px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:0.875rem;outline:none;cursor:pointer;"
+                        onfocus="this.style.borderColor='rgba(59,130,246,0.5)'"
+                        onblur="this.style.borderColor='rgba(255,255,255,0.08)'">
+                    <option value="">Select a category…</option>
+                    <option value="incident">🚨 Incident Reporting</option>
+                    <option value="infra">⚙️ Infrastructure Request</option>
+                    <option value="security">🔑 Access / Security</option>
+                    <option value="hr">🏢 HR Query</option>
+                    <option value="other">💬 General Support</option>
+                </select>
+            </div>
+            <div style="margin-bottom:20px;">
+                <label style="display:block;font-size:0.8rem;font-weight:600;color:#94a3b8;margin-bottom:6px;" for="form-msg">Message *</label>
+                <textarea id="form-msg" th:field="*{message}" placeholder="Describe your query, ticket or operational concern…" rows="4"
+                          style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 14px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:0.875rem;outline:none;resize:vertical;min-height:100px;transition:border-color 0.2s;"
+                          onfocus="this.style.borderColor='rgba(59,130,246,0.5)'"
+                          onblur="this.style.borderColor='rgba(255,255,255,0.08)'"></textarea>
+                <div id="char-count" style="font-size:0.72rem;color:#475569;text-align:right;margin-top:4px;">0 / 500</div>
+            </div>
+            <button type="submit" class="btn btn-primary" id="form-submit-btn">✉️ Send Message</button>
+            <p style="margin-top:10px;font-size:0.75rem;color:#475569;">
+                📊 Each submission is tracked as a metric in Graphite under
+                <code style="color:#93c5fd;">hr_portal.support.requests.submitted</code>
+            </p>
+        </form>
     </section>
+
+    <!-- Support Lead Team Directory -->
+    <section class="panel scroll-reveal" aria-label="Support Directory">
+        <h2><span class="panel-icon">👥</span> Operations Directory</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:8px;">
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:16px;display:flex;align-items:center;gap:12px;">
+                <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">👨</div>
+                <div>
+                    <div style="font-weight:600;font-size:0.9rem;color:#e2e8f0;">John Smith</div>
+                    <div style="font-size:0.75rem;color:#64748b;">IT Operations Lead</div>
+                    <div style="font-size:0.75rem;color:#94a3b8;margin-top:2px;">john.ops@company.com</div>
+                </div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:16px;display:flex;align-items:center;gap:12px;">
+                <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#10b981,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">👩</div>
+                <div>
+                    <div style="font-weight:600;font-size:0.9rem;color:#e2e8f0;">Alice Cooper</div>
+                    <div style="font-size:0.75rem;color:#64748b;">Security Officer</div>
+                    <div style="font-size:0.75rem;color:#94a3b8;margin-top:2px;">alice.sec@company.com</div>
+                </div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:16px;display:flex;align-items:center;gap:12px;">
+                <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">👩</div>
+                <div>
+                    <div style="font-weight:600;font-size:0.9rem;color:#e2e8f0;">Priya Sharma</div>
+                    <div style="font-size:0.75rem;color:#64748b;">HR Lead</div>
+                    <div style="font-size:0.75rem;color:#94a3b8;margin-top:2px;">priya@company.com</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
 </main>
+
+<footer>
+    <p>© 2026 <span>Operations Observability Portal</span> · Built with Spring Boot + Thymeleaf · DevOps: Jenkins → Docker → Kubernetes</p>
+</footer>
+
+<script src="/js/script.js"></script>
+<script>
+(function () {
+    // ── Live Support Hours Indicator ─────────────────────
+    function updateHoursStatus() {
+        var now  = new Date();
+        var day  = now.getDay();
+        var hour = now.getHours();
+        var mins = now.getMinutes();
+        var open = (day >= 1 && day <= 5) && (hour >= 9 && hour < 18);
+
+        var dot  = document.getElementById('hours-dot');
+        var text = document.getElementById('hours-text');
+        var time = document.getElementById('hours-time');
+
+        if (open) {
+            dot.style.background   = '#10b981';
+            dot.style.boxShadow    = '0 0 8px #10b981';
+            text.textContent       = 'Operations Support desk is active';
+            text.style.color       = '#34d399';
+        } else {
+            dot.style.background   = '#ef4444';
+            dot.style.boxShadow    = '0 0 8px #ef4444';
+            text.textContent       = 'On-Call pager active (core desk closed)';
+            text.style.color       = '#f87171';
+        }
+        time.textContent = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) + ' IST';
+    }
+    updateHoursStatus();
+    setInterval(updateHoursStatus, 30000);
+
+    // ── Copy Contact ───────────────────────────────────────
+    window.copyContact = function (text, btnId) {
+        navigator.clipboard.writeText(text).then(function () {
+            var btn = document.getElementById(btnId);
+            if (!btn) return;
+            var old = btn.textContent;
+            btn.textContent = '✅ Copied!';
+            setTimeout(function () { btn.textContent = old; }, 1600);
+        });
+    };
+
+    // ── Character Counter ──────────────────────────────────
+    var msgArea   = document.getElementById('form-msg');
+    var charCount = document.getElementById('char-count');
+    if (msgArea) {
+        msgArea.addEventListener('input', function () {
+            var len = this.value.length;
+            charCount.textContent = len + ' / 500';
+            if (len > 450) charCount.style.color = '#f59e0b';
+            else           charCount.style.color = '#475569';
+        });
+    }
+
+    // ── Real form: show loading state while submitting ────────
+    var form = document.getElementById('support-form');
+    if (form) {
+        form.addEventListener('submit', function () {
+            var btn = document.getElementById('form-submit-btn');
+            btn.textContent = '⏳ Submitting…';
+            btn.disabled = true;
+        });
+    }
+})();
+</script>
 </body>
 </html>

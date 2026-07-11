@@ -2,51 +2,396 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Company Intranet Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Internal Service Health &amp; Operations Dashboard — Real-time infrastructure status, alerts, and incident feed">
+    <title>Internal Service Health &amp; Operations Dashboard</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
+
+<!-- Theme Toggle -->
+<button id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode"
+        style="position:fixed;top:14px;right:72px;z-index:9998;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">🌙</button>
+
+<!-- Keyboard Shortcut Hint -->
+<div id="shortcut-hint"
+     style="position:fixed;top:14px;right:120px;z-index:9998;font-size:0.72rem;color:#475569;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);padding:6px 10px;border-radius:8px;display:flex;align-items:center;gap:5px;cursor:default;">
+    <kbd style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:4px;padding:1px 5px;font-size:0.68rem;font-family:monospace;">Ctrl</kbd>+<kbd style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:4px;padding:1px 5px;font-size:0.68rem;font-family:monospace;">K</kbd> Quick Search
+</div>
+
 <header>
-    <h1>Company Intranet Portal</h1>
-    <p>Company news, HR policies, holiday calendars, announcements, and admin monitoring</p>
+    <div class="header-inner">
+        <div class="header-badge">🛡️ Production Observability Portal · DevOps-Powered</div>
+        <h1>Service Operations Dashboard</h1>
+        <p>Real-time visibility into the health of internal services, maintenance schedules, deployments, and operational incidents</p>
+        <div class="header-clock" id="hr-clock">Loading…</div>
+    </div>
 </header>
 
 <nav>
-    <a href="/">Home</a>
-    <a href="/news">News</a>
-    <a href="/policies">Policies</a>
-    <a href="/holidays">Holidays</a>
-    <a href="/announcements">Announcements</a>
-    <a href="/contact">Contact</a>
+    <a href="/">🏠 Home</a>
+    <a href="/services">🖥️ Services</a>
+    <a href="/dashboard">📊 Dashboard</a>
+    <a href="/maintenance">🔧 Maintenance</a>
+    <a href="/incidents">🚨 Incidents</a>
+    <a href="/contact">📞 Contact</a>
 </nav>
 
+<!-- Global Quick Search Modal -->
+<div id="search-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);align-items:flex-start;justify-content:center;padding-top:120px;">
+    <div style="width:min(560px,92vw);background:#0f1526;border:1px solid rgba(255,255,255,0.12);border-radius:16px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.6);">
+        <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.07);">
+            <span style="font-size:1.1rem;">🔍</span>
+            <input type="text" id="global-search-input" placeholder="Search services, incidents, maintenance…"
+                   autocomplete="off"
+                   style="flex:1;background:none;border:none;outline:none;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:0.95rem;"
+                   oninput="globalSearch(this.value)">
+            <kbd onclick="closeSearch()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:2px 8px;font-size:0.72rem;color:#64748b;cursor:pointer;">ESC</kbd>
+        </div>
+        <div id="search-results" style="max-height:340px;overflow-y:auto;padding:8px 0;">
+            <div style="text-align:center;padding:32px;color:#475569;font-size:0.875rem;">Start typing to search…</div>
+        </div>
+        <div style="padding:10px 20px;border-top:1px solid rgba(255,255,255,0.05);font-size:0.72rem;color:#334155;display:flex;gap:16px;">
+            <span>↑↓ Navigate</span><span>↵ Open</span><span>ESC Close</span>
+        </div>
+    </div>
+</div>
+
 <main>
-    <section class="grid">
-        <div class="card" th:each="status : ${statuses}">
-            <h2 th:text="${status.service}"></h2>
-            <p class="green" th:text="${status.status}"></p>
-            <p th:text="${status.details}"></p>
+
+    <!-- ── Overall Status Alert Banner ─────────────────── -->
+    <div class="panel scroll-reveal" style="padding: 20px; margin-bottom: 24px; border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.05);" th:if="${servicesDownCount > 0}">
+        <div style="display:flex; align-items:center; gap: 12px;">
+            <span style="font-size: 1.5rem;">⚠️</span>
+            <div>
+                <strong style="color: #f59e0b; font-size: 1rem;">Degraded Performance Observed</strong>
+                <p style="font-size: 0.85rem; color: var(--clr-text-muted); margin-top: 2px;">
+                    <span th:text="${servicesDownCount}">1</span> service is currently down. Check the <a href="/services" style="color: #93c5fd; text-decoration: underline;">Services page</a> for details.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="panel scroll-reveal" style="padding: 20px; margin-bottom: 24px; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.05);" th:if="${servicesDownCount == 0}">
+        <div style="display:flex; align-items:center; gap: 12px;">
+            <span style="font-size: 1.5rem;">✅</span>
+            <div>
+                <strong style="color: #10b981; font-size: 1rem;">All Critical Services Operational</strong>
+                <p style="font-size: 0.85rem; color: var(--clr-text-muted); margin-top: 2px;">No active outages. Uptime levels are within target SLAs.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── System Status Grid ──────────────────────────── -->
+    <p class="section-heading scroll-reveal">⚙️ Infrastructure Overview</p>
+    <section class="grid" aria-label="System Status">
+        <!-- Active Services -->
+        <div class="card scroll-reveal">
+            <div class="card-icon" style="background:rgba(16,185,129,0.12);color:#10b981;">🖥️</div>
+            <h2>Active Services</h2>
+            <span class="status-badge up" th:text="|${activeServicesCount} Online|">4 Online</span>
+            <p>Core platforms currently running healthy</p>
+        </div>
+        <!-- Services Down -->
+        <div class="card scroll-reveal">
+            <div class="card-icon" style="background:rgba(239,68,68,0.12);color:#ef4444;">🚨</div>
+            <h2>Services Down</h2>
+            <span class="status-badge down" th:text="|${servicesDownCount} Offline|">1 Offline</span>
+            <p>Services experiencing outages or issues</p>
+        </div>
+        <!-- Ongoing Maintenance -->
+        <div class="card scroll-reveal">
+            <div class="card-icon" style="background:rgba(245,158,11,0.12);color:#f59e0b;">🔧</div>
+            <h2>Ongoing Maintenance</h2>
+            <span class="status-badge warn" th:text="|${ongoingMaintenanceCount} Active|">0 Active</span>
+            <p>Scheduled service updates in progress</p>
+        </div>
+        <!-- Active Alerts -->
+        <div class="card scroll-reveal">
+            <div class="card-icon" style="background:rgba(239,68,68,0.12);color:#ef4444;">⚠️</div>
+            <h2>Active Alerts</h2>
+            <span class="status-badge down" th:text="|${activeAlertsCount} Active|">2 Active</span>
+            <p>Active incidents needing resolution</p>
+        </div>
+        <!-- Current Deployment Version -->
+        <div class="card scroll-reveal">
+            <div class="card-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6;">🚀</div>
+            <h2>Current Version</h2>
+            <span class="status-badge up" th:text="${deploymentVersion}">v1.0.0</span>
+            <p>Production version release build</p>
         </div>
     </section>
 
-    <section class="panel">
-        <h2>Latest News</h2>
-        <div class="item" th:each="item : ${news}">
-            <h3 th:text="${item.title}"></h3>
-            <p th:text="${item.description}"></p>
-            <small th:text="${item.date}"></small>
+    <!-- ── Quick Stats Bar ──────────────────────────────── -->
+    <div class="stats-bar scroll-reveal">
+        <div class="stat-item">
+            <div>
+                <div class="stat-number" th:text="${cpuValue}">64%</div>
+                <div class="stat-label">CPU Usage</div>
+            </div>
         </div>
-    </section>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div>
+                <div class="stat-number" th:text="${memValue}">71%</div>
+                <div class="stat-label">Memory Usage</div>
+            </div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div>
+                <div class="stat-number" th:text="${requestRateValue}">135</div>
+                <div class="stat-label">Requests/min</div>
+            </div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div>
+                <div class="stat-number" th:text="${availabilityValue}">99.95%</div>
+                <div class="stat-label">System Uptime</div>
+            </div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div>
+                <div class="stat-number" id="stat-workday" style="font-size:0.95rem;">–</div>
+                <div class="stat-label">Operations Status</div>
+            </div>
+        </div>
+    </div>
 
-    <section class="panel">
-        <h2>Announcements</h2>
-        <div class="item" th:each="announcement : ${announcements}">
-            <h3 th:text="${announcement.title}"></h3>
-            <p th:text="${announcement.message}"></p>
+    <!-- ── Quick Links ──────────────────────────────────── -->
+    <p class="section-heading scroll-reveal" style="margin-top:8px;">🔗 Quick Access</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:32px;" class="scroll-reveal">
+        <a href="/services"     class="quick-link-card">🖥️<span>Services</span></a>
+        <a href="/dashboard"    class="quick-link-card">📊<span>Metrics</span></a>
+        <a href="/maintenance"  class="quick-link-card">🔧<span>Maintenance</span></a>
+        <a href="/incidents"    class="quick-link-card">🚨<span>Incidents</span></a>
+        <a href="/contact"      class="quick-link-card">📞<span>IT Contacts</span></a>
+        <a href="/actuator/health" target="_blank" class="quick-link-card" style="border-color:rgba(16,185,129,0.2);">🩺<span>Health API</span></a>
+    </div>
+
+    <!-- ── Services Summary & Incident Side-by-Side ────── -->
+    <p class="section-heading scroll-reveal">📋 Dashboard Summaries</p>
+    <div class="dashboard-grid">
+
+        <section class="panel scroll-reveal" aria-label="Services Status">
+            <h2>
+                <span class="panel-icon">🖥️</span>
+                Services Status
+            </h2>
+            <div th:each="service : ${services}" class="item" style="display:flex; justify-content:space-between; align-items:center; padding: 10px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                <div>
+                    <h3 th:text="${service.service}" style="font-size:0.95rem; font-weight:600; color:var(--clr-text);">Service</h3>
+                    <small th:text="|Latency: ${service.responseTime}|" style="color:var(--clr-text-muted);">Latency: 45 ms</small>
+                </div>
+                <span class="status-badge" th:text="${service.status}">UP</span>
+            </div>
+            <div style="margin-top:18px;padding-top:14px;">
+                <a href="/services" class="btn btn-secondary" style="font-size:0.8rem;width:100%;justify-content:center;">View all services →</a>
+            </div>
+        </section>
+
+        <section class="panel scroll-reveal" aria-label="Active Incidents">
+            <h2>
+                <span class="panel-icon">🚨</span>
+                Recent Incidents
+            </h2>
+            <div th:each="incident : ${incidents}" class="announcement-card" style="margin-bottom: 12px; padding: 14px; border: 1px solid var(--clr-border); border-radius: var(--radius-sm); background: rgba(255,255,255,0.01);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <h3 th:text="${incident.title}" style="font-size:0.92rem; font-weight:600; color:var(--clr-text);">Title</h3>
+                    <span class="status-badge" th:text="${incident.status}" style="font-size:0.7rem; padding: 1px 6px;">Active</span>
+                </div>
+                <p th:text="${incident.description}" style="font-size:0.82rem; color:var(--clr-text-muted); margin-top:6px;">Description</p>
+                <small th:text="${incident.timestamp}" style="color:var(--clr-text-faint); font-size:0.75rem;">10 mins ago</small>
+            </div>
+            <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06);">
+                <a href="/incidents" class="btn btn-secondary" style="font-size:0.8rem;width:100%;justify-content:center;">View incident feed →</a>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- ── DevOps Pipeline Status ───────────────────────── -->
+    <p class="section-heading scroll-reveal" style="margin-top:8px;">🚀 DevOps Pipeline</p>
+    <div class="panel scroll-reveal" style="padding:20px 24px;">
+        <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;position:relative;">
+            <div class="pipeline-step active">
+                <div class="pipeline-icon">🔨</div>
+                <div class="pipeline-label">Build<br><span class="pipeline-sub">Maven</span></div>
+            </div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-step active">
+                <div class="pipeline-icon">🧪</div>
+                <div class="pipeline-label">Test<br><span class="pipeline-sub">JUnit</span></div>
+            </div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-step active">
+                <div class="pipeline-icon">🐳</div>
+                <div class="pipeline-label">Docker<br><span class="pipeline-sub">Containerize</span></div>
+            </div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-step active">
+                <div class="pipeline-icon">⚙️</div>
+                <div class="pipeline-label">K8s<br><span class="pipeline-sub">Deploy</span></div>
+            </div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-step active">
+                <div class="pipeline-icon">📊</div>
+                <div class="pipeline-label">Monitor<br><span class="pipeline-sub">Grafana</span></div>
+            </div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-step active">
+                <div class="pipeline-icon">🚨</div>
+                <div class="pipeline-label">Alert<br><span class="pipeline-sub">Nagios</span></div>
+            </div>
         </div>
-    </section>
+        <div style="margin-top:14px;font-size:0.78rem;color:#475569;display:flex;align-items:center;gap:6px;">
+            <span style="width:6px;height:6px;border-radius:50%;background:#10b981;box-shadow:0 0 6px #10b981;display:inline-block;animation:pulse 2s infinite;"></span>
+            All pipeline stages operational · Last build: <span id="last-build-time" style="font-family:'JetBrains Mono',monospace;color:#64748b;"></span>
+        </div>
+    </div>
+
 </main>
 
+<footer>
+    <p>© 2026 <span>Operations Observability Portal</span> · Built with Spring Boot + Thymeleaf · DevOps: Jenkins → Docker → Kubernetes → Grafana → Nagios</p>
+</footer>
+
+<!-- Back to Top -->
+<div id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})"
+     style="position:fixed;bottom:80px;right:24px;width:42px;height:42px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:50%;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(59,130,246,0.4);z-index:1000;font-size:1rem;"
+     title="Back to top">↑</div>
+
 <script src="/js/script.js"></script>
+<script>
+(function () {
+    // Stats counters
+    setTimeout(function () {
+        var upCount = document.querySelectorAll('.status-badge.up').length;
+        // The script.js will handle coloring the status badges when they load.
+    }, 100);
+
+    // Operations hour status
+    var now  = new Date();
+    var day  = now.getDay();
+    var hour = now.getHours();
+    var wdEl = document.getElementById('stat-workday');
+    if (day === 0 || day === 6) {
+        wdEl.textContent   = '🎉 Weekend Ops';
+        wdEl.style.fontSize = '0.85rem';
+    } else if (hour >= 9 && hour < 18) {
+        wdEl.textContent   = '✅ Core Hours';
+        wdEl.style.fontSize = '0.85rem';
+    } else {
+        wdEl.textContent   = '🌙 On-Call Support';
+        wdEl.style.fontSize = '0.85rem';
+    }
+
+    // Last build time (simulated)
+    var buildMins = Math.floor(Math.random() * 45) + 5;
+    document.getElementById('last-build-time').textContent = buildMins + ' min ago';
+
+    // Back to top
+    window.addEventListener('scroll', function () {
+        var btt = document.getElementById('back-to-top');
+        btt.style.display = document.documentElement.scrollTop > 300 ? 'flex' : 'none';
+    });
+
+    // ── Global Quick Search (Ctrl+K) ───────────────
+    window.openSearch = function () {
+        var modal = document.getElementById('search-modal');
+        modal.style.display = 'flex';
+        setTimeout(function () { document.getElementById('global-search-input').focus(); }, 50);
+    };
+    window.closeSearch = function () {
+        document.getElementById('search-modal').style.display = 'none';
+        document.getElementById('global-search-input').value  = '';
+        document.getElementById('search-results').innerHTML   = '<div style="text-align:center;padding:32px;color:#475569;font-size:0.875rem;">Start typing to search…</div>';
+    };
+    document.getElementById('search-modal').addEventListener('click', function (e) {
+        if (e.target === this) closeSearch();
+    });
+
+    // Search index built for service dashboard
+    var searchIndex = [
+        { type: 'Service', title: 'Employee Portal', desc: 'UP - Latency: 45 ms', url: '/services' },
+        { type: 'Service', title: 'Jenkins CI/CD', desc: 'UP - Latency: 110 ms', url: '/services' },
+        { type: 'Service', title: 'Git Repository', desc: 'UP - Latency: 75 ms', url: '/services' },
+        { type: 'Service', title: 'VPN Gateway', desc: 'DOWN - Timeout', url: '/services' },
+        { type: 'Service', title: 'Email Service', desc: 'UP - Latency: 80 ms', url: '/services' },
+        { type: 'Maintenance', title: 'Jenkins Upgrade', desc: 'Scheduled: 12 July 2026 11 PM', url: '/maintenance' },
+        { type: 'Maintenance', title: 'VPN Maintenance', desc: 'Scheduled: 14 July 2026 10 PM', url: '/maintenance' },
+        { type: 'Maintenance', title: 'Database Backup', desc: 'Scheduled: 16 July 2026 1 AM', url: '/maintenance' },
+        { type: 'Incident', title: 'VPN service interruption resolved.', desc: 'Resolved - 1 hour ago', url: '/incidents' },
+        { type: 'Incident', title: 'Elevated API latency observed.', desc: 'Active - 30 mins ago', url: '/incidents' },
+        { type: 'Incident', title: 'Email delivery delays detected.', desc: 'Active - 15 mins ago', url: '/incidents' },
+        { type: 'Page', title: 'Metrics Dashboard', desc: 'Live charts for CPU, Memory, Request Rate, Availability', url: '/dashboard' },
+        { type: 'Page', title: 'IT Contacts Directory', desc: 'IT Support, Infrastructure, Security, and HR contact lines', url: '/contact' }
+    ];
+
+    window.globalSearch = function (q) {
+        var container = document.getElementById('search-results');
+        q = q.trim().toLowerCase();
+        if (!q) {
+            container.innerHTML = '<div style="text-align:center;padding:32px;color:#475569;font-size:0.875rem;">Start typing to search…</div>';
+            return;
+        }
+        var results = searchIndex.filter(function (item) {
+            return item.title.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q);
+        });
+        if (results.length === 0) {
+            container.innerHTML = '<div style="text-align:center;padding:32px;color:#475569;font-size:0.875rem;">No results found for "' + q + '"</div>';
+            return;
+        }
+        container.innerHTML = results.map(function (r) {
+            var typeColors = { 'Service':'#3b82f6', 'Maintenance':'#8b5cf6', 'Incident':'#ef4444', 'Page':'#10b981' };
+            return '<a href="' + r.url + '" style="display:block;padding:12px 20px;text-decoration:none;transition:background 0.15s;" onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'" onmouseout="this.style.background=\'\'"><div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;"><span style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:' + (typeColors[r.type]||'#64748b') + ';background:rgba(255,255,255,0.05);padding:1px 7px;border-radius:100px;">' + r.type + '</span><span style="font-size:0.9rem;font-weight:600;color:#e2e8f0;">' + r.title + '</span></div><div style="font-size:0.78rem;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + r.desc + '</div></a>';
+        }).join('<div style="height:1px;background:rgba(255,255,255,0.04);margin:0 20px;"></div>');
+    };
+
+    // Keyboard shortcut
+    document.addEventListener('keydown', function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            openSearch();
+        }
+        if (e.key === 'Escape') closeSearch();
+    });
+
+    // ── Theme Toggle ───────────────────────────────
+    var savedTheme = localStorage.getItem('hr-theme') || 'dark';
+    if (savedTheme === 'light') applyLightTheme();
+    window.toggleTheme = function () {
+        savedTheme = savedTheme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('hr-theme', savedTheme);
+        savedTheme === 'light' ? applyLightTheme() : applyDarkTheme();
+    };
+    function applyLightTheme() {
+        document.documentElement.style.setProperty('--clr-bg',       '#f0f4f8');
+        document.documentElement.style.setProperty('--clr-bg-2',     '#ffffff');
+        document.documentElement.style.setProperty('--clr-surface',  'rgba(0,0,0,0.03)');
+        document.documentElement.style.setProperty('--clr-surface-hover', 'rgba(0,0,0,0.06)');
+        document.documentElement.style.setProperty('--clr-border',   'rgba(0,0,0,0.1)');
+        document.documentElement.style.setProperty('--clr-border-hover', 'rgba(59,130,246,0.4)');
+        document.documentElement.style.setProperty('--clr-text',     '#1e293b');
+        document.documentElement.style.setProperty('--clr-text-muted','#475569');
+        document.documentElement.style.setProperty('--clr-text-faint','#94a3b8');
+        document.getElementById('theme-toggle').textContent = '☀️';
+    }
+    function applyDarkTheme() {
+        document.documentElement.style.setProperty('--clr-bg',       '#0a0e1a');
+        document.documentElement.style.setProperty('--clr-bg-2',     '#0f1526');
+        document.documentElement.style.setProperty('--clr-surface',  'rgba(255,255,255,0.04)');
+        document.documentElement.style.setProperty('--clr-surface-hover', 'rgba(255,255,255,0.08)');
+        document.documentElement.style.setProperty('--clr-border',   'rgba(255,255,255,0.08)');
+        document.documentElement.style.setProperty('--clr-border-hover', 'rgba(99,179,237,0.4)');
+        document.documentElement.style.setProperty('--clr-text',     '#e2e8f0');
+        document.documentElement.style.setProperty('--clr-text-muted','#94a3b8');
+        document.documentElement.style.setProperty('--clr-text-faint','#475569');
+        document.getElementById('theme-toggle').textContent = '🌙';
+    }
+})();
+</script>
 </body>
 </html>

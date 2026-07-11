@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Scheduled Maintenance Calendar — Upcoming service windows and planned downtime">
+    <title>Scheduled Maintenance</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- Theme Toggle -->
+<button id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode"
+        style="position:fixed;top:14px;right:72px;z-index:9998;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">🌙</button>
+
+<header>
+    <div class="header-inner">
+        <div class="header-badge">🔧 Maintenance Schedules</div>
+        <h1>Maintenance Windows</h1>
+        <p>Information on upcoming service updates, hardware upgrades, and database maintenance</p>
+        <div class="header-clock" id="hr-clock">Loading…</div>
+    </div>
+</header>
+
+<nav>
+    <a href="/">🏠 Home</a>
+    <a href="/services">🖥️ Services</a>
+    <a href="/dashboard">📊 Dashboard</a>
+    <a href="/maintenance">🔧 Maintenance</a>
+    <a href="/incidents">🚨 Incidents</a>
+    <a href="/contact">📞 Contact</a>
+</nav>
+
+<main>
+    <div class="page-title scroll-reveal">
+        <h2>🔧 Scheduled Windows</h2>
+        <p>Please review these timeframes to prevent service disruptions</p>
+    </div>
+
+    <!-- Maintenance Timeline/List -->
+    <section aria-label="Maintenance Schedule">
+        <div th:each="window, iterStat : ${maintenanceWindows}" class="panel scroll-reveal" style="display:flex; flex-direction:column; gap:12px; border-color: rgba(99,179,237,0.15); background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%); margin-bottom: 16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:40px; height:40px; border-radius:8px; background:rgba(99,179,237,0.12); display:flex; align-items:center; justify-content:center; font-size:1.2rem; color:#90cdf4;">🛠️</div>
+                    <div>
+                        <h3 th:text="${window.service}" style="font-size:1.05rem; font-weight:600; color:#fff;">Service Maintenance</h3>
+                        <p style="font-size:0.8rem; color:var(--clr-text-muted);" th:text="|Schedule: ${window.dateTime}|">Date &amp; Time</p>
+                    </div>
+                </div>
+                <span class="status-badge warn" th:text="${window.status}">Scheduled</span>
+            </div>
+            <p style="font-size:0.88rem; color:var(--clr-text-muted); line-height:1.5; margin-left: 52px;">
+                Scheduled system optimizations and security patches. Minor service degradation might occur during the window.
+            </p>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <p>© 2026 <span>Operations Observability Portal</span> · Built with Spring Boot + Thymeleaf · DevOps: Jenkins → Docker → Kubernetes</p>
+</footer>
+
+<script src="/js/script.js"></script>
+<script>
+(function () {
+    // ── Theme Toggle ───────────────────────────────
+    var savedTheme = localStorage.getItem('hr-theme') || 'dark';
+    if (savedTheme === 'light') applyLightTheme();
+    window.toggleTheme = function () {
+        savedTheme = savedTheme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('hr-theme', savedTheme);
+        savedTheme === 'light' ? applyLightTheme() : applyDarkTheme();
+    };
+    function applyLightTheme() {
+        document.documentElement.style.setProperty('--clr-bg',       '#f0f4f8');
+        document.documentElement.style.setProperty('--clr-bg-2',     '#ffffff');
+        document.documentElement.style.setProperty('--clr-surface',  'rgba(0,0,0,0.03)');
+        document.documentElement.style.setProperty('--clr-surface-hover', 'rgba(0,0,0,0.06)');
+        document.documentElement.style.setProperty('--clr-border',   'rgba(0,0,0,0.1)');
+        document.documentElement.style.setProperty('--clr-border-hover', 'rgba(59,130,246,0.4)');
+        document.documentElement.style.setProperty('--clr-text',     '#1e293b');
+        document.documentElement.style.setProperty('--clr-text-muted','#475569');
+        document.documentElement.style.setProperty('--clr-text-faint','#94a3b8');
+        document.getElementById('theme-toggle').textContent = '☀️';
+    }
+    function applyDarkTheme() {
+        document.documentElement.style.setProperty('--clr-bg',       '#0a0e1a');
+        document.documentElement.style.setProperty('--clr-bg-2',     '#0f1526');
+        document.documentElement.style.setProperty('--clr-surface',  'rgba(255,255,255,0.04)');
+        document.documentElement.style.setProperty('--clr-surface-hover', 'rgba(255,255,255,0.08)');
+        document.documentElement.style.setProperty('--clr-border',   'rgba(255,255,255,0.08)');
+        document.documentElement.style.setProperty('--clr-border-hover', 'rgba(99,179,237,0.4)');
+        document.documentElement.style.setProperty('--clr-text',     '#e2e8f0');
+        document.documentElement.style.setProperty('--clr-text-muted','#94a3b8');
+        document.documentElement.style.setProperty('--clr-text-faint','#475569');
+        document.getElementById('theme-toggle').textContent = '🌙';
+    }
+})();
+</script>
+</body>
+</html>

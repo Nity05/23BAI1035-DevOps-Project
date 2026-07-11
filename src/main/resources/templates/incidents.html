@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Incident Log &amp; Operations Feed — History of system alerts, degradations, and resolutions">
+    <title>Incident Feed</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- Theme Toggle -->
+<button id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode"
+        style="position:fixed;top:14px;right:72px;z-index:9998;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">🌙</button>
+
+<header>
+    <div class="header-inner">
+        <div class="header-badge">🚨 Operational Log</div>
+        <h1>Operations Incident Feed</h1>
+        <p>Live tracking of system issues, investigations, and resolved incidents</p>
+        <div class="header-clock" id="hr-clock">Loading…</div>
+    </div>
+</header>
+
+<nav>
+    <a href="/">🏠 Home</a>
+    <a href="/services">🖥️ Services</a>
+    <a href="/dashboard">📊 Dashboard</a>
+    <a href="/maintenance">🔧 Maintenance</a>
+    <a href="/incidents">🚨 Incidents</a>
+    <a href="/contact">📞 Contact</a>
+</nav>
+
+<main>
+    <div class="page-title scroll-reveal">
+        <h2>🚨 Recent Incidents</h2>
+        <p>Telemetry warnings and manual logs reported by the on-call DevOps team</p>
+    </div>
+
+    <!-- Search/Filter Incident -->
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;" class="scroll-reveal">
+        <div class="search-bar" style="flex:1;margin-bottom:0;">
+            <input type="text" id="incident-search" placeholder="Search incidents…" autocomplete="off" aria-label="Search incidents" oninput="filterIncidents(this.value)">
+        </div>
+    </div>
+
+    <!-- Incident List -->
+    <section aria-label="Incident List">
+        <div th:each="incident : ${incidents}" class="panel scroll-reveal incident-panel" style="margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
+                <div>
+                    <h3 class="incident-title" th:text="${incident.title}" style="font-size:1.1rem; font-weight:600; color:#fff;">Incident Title</h3>
+                    <small style="color:var(--clr-text-faint); font-family: 'JetBrains Mono', monospace;" th:text="${incident.timestamp}">1 hour ago</small>
+                </div>
+                <span class="status-badge" th:text="${incident.status}">Active</span>
+            </div>
+            <p class="incident-desc" th:text="${incident.description}" style="font-size:0.9rem; color:var(--clr-text-muted); margin-top:10px; line-height:1.5;">Incident details go here.</p>
+        </div>
+        <div class="empty-state" id="incidents-empty" style="display:none; text-align:center; padding:32px;">
+            <div class="empty-state-icon">🔍</div>
+            <p>No incidents match your search.</p>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <p>© 2026 <span>Operations Observability Portal</span> · Built with Spring Boot + Thymeleaf · DevOps: Jenkins → Docker → Kubernetes</p>
+</footer>
+
+<script src="/js/script.js"></script>
+<script>
+(function () {
+    var panels = document.querySelectorAll('.incident-panel');
+
+    window.filterIncidents = function(q) {
+        q = q.trim().toLowerCase();
+        var count = 0;
+        panels.forEach(function(panel) {
+            var title = panel.querySelector('.incident-title').textContent.toLowerCase();
+            var desc = panel.querySelector('.incident-desc').textContent.toLowerCase();
+            var status = panel.querySelector('.status-badge').textContent.toLowerCase();
+            var match = title.includes(q) || desc.includes(q) || status.includes(q);
+            panel.style.display = match ? '' : 'none';
+            if (match) count++;
+        });
+        document.getElementById('incidents-empty').style.display = count === 0 ? 'block' : 'none';
+    };
+
+    // ── Theme Toggle ───────────────────────────────
+    var savedTheme = localStorage.getItem('hr-theme') || 'dark';
+    if (savedTheme === 'light') applyLightTheme();
+    window.toggleTheme = function () {
+        savedTheme = savedTheme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('hr-theme', savedTheme);
+        savedTheme === 'light' ? applyLightTheme() : applyDarkTheme();
+    };
+    function applyLightTheme() {
+        document.documentElement.style.setProperty('--clr-bg',       '#f0f4f8');
+        document.documentElement.style.setProperty('--clr-bg-2',     '#ffffff');
+        document.documentElement.style.setProperty('--clr-surface',  'rgba(0,0,0,0.03)');
+        document.documentElement.style.setProperty('--clr-surface-hover', 'rgba(0,0,0,0.06)');
+        document.documentElement.style.setProperty('--clr-border',   'rgba(0,0,0,0.1)');
+        document.documentElement.style.setProperty('--clr-border-hover', 'rgba(59,130,246,0.4)');
+        document.documentElement.style.setProperty('--clr-text',     '#1e293b');
+        document.documentElement.style.setProperty('--clr-text-muted','#475569');
+        document.documentElement.style.setProperty('--clr-text-faint','#94a3b8');
+        document.getElementById('theme-toggle').textContent = '☀️';
+    }
+    function applyDarkTheme() {
+        document.documentElement.style.setProperty('--clr-bg',       '#0a0e1a');
+        document.documentElement.style.setProperty('--clr-bg-2',     '#0f1526');
+        document.documentElement.style.setProperty('--clr-surface',  'rgba(255,255,255,0.04)');
+        document.documentElement.style.setProperty('--clr-surface-hover', 'rgba(255,255,255,0.08)');
+        document.documentElement.style.setProperty('--clr-border',   'rgba(255,255,255,0.08)');
+        document.documentElement.style.setProperty('--clr-border-hover', 'rgba(99,179,237,0.4)');
+        document.documentElement.style.setProperty('--clr-text',     '#e2e8f0');
+        document.documentElement.style.setProperty('--clr-text-muted','#94a3b8');
+        document.documentElement.style.setProperty('--clr-text-faint','#475569');
+        document.getElementById('theme-toggle').textContent = '🌙';
+    }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Internal Service Health Status — Monitor real-time status of critical systems">
+    <title>Service Health Status</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- Theme Toggle -->
+<button id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode"
+        style="position:fixed;top:14px;right:72px;z-index:9998;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">🌙</button>
+
+<header>
+    <div class="header-inner">
+        <div class="header-badge">🖥️ Service Monitoring</div>
+        <h1>System Service Status</h1>
+        <p>Operational health check overview of all core services and gateway systems</p>
+        <div class="header-clock" id="hr-clock">Loading…</div>
+    </div>
+</header>
+
+<nav>
+    <a href="/">🏠 Home</a>
+    <a href="/services">🖥️ Services</a>
+    <a href="/dashboard">📊 Dashboard</a>
+    <a href="/maintenance">🔧 Maintenance</a>
+    <a href="/incidents">🚨 Incidents</a>
+    <a href="/contact">📞 Contact</a>
+</nav>
+
+<main>
+    <div class="page-title scroll-reveal">
+        <h2>🖥️ Service Status</h2>
+        <p>Current system-wide operational checks and connection latencies</p>
+    </div>
+
+    <!-- Search / Filter -->
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap;" class="scroll-reveal">
+        <div class="search-bar" style="flex:1;min-width:220px;margin-bottom:0;">
+            <input type="text" id="services-search" placeholder="Search services…" autocomplete="off" aria-label="Search services" oninput="filterServices(this.value)">
+        </div>
+        <button class="btn btn-secondary" onclick="window.print()" style="white-space:nowrap;">🖨️ Print Status Report</button>
+    </div>
+
+    <!-- Service Status Table -->
+    <section class="panel scroll-reveal" aria-label="Service List">
+        <h2><span class="panel-icon">⚙️</span> Monitored Components <span id="service-count" style="font-size:0.8rem;font-weight:500;color:#64748b;margin-left:8px;"></span></h2>
+        <div class="table-wrapper">
+            <table id="services-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Service</th>
+                        <th>Status</th>
+                        <th>Response Time</th>
+                        <th>Last Checked</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="service, iterStat : ${services}" class="service-row">
+                        <td class="muted mono" style="font-size:0.8rem;" th:text="${iterStat.count}">1</td>
+                        <td><strong class="service-name" th:text="${service.service}">Employee Portal</strong></td>
+                        <td><span class="status-badge" th:text="${service.status}">UP</span></td>
+                        <td class="mono" th:text="${service.responseTime}">45 ms</td>
+                        <td class="muted" style="font-size:0.82rem;" th:text="${service.lastChecked}">2 mins ago</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="services-empty" style="display:none; text-align:center; padding:32px;">
+            <div class="empty-state-icon">🔍</div>
+            <p>No services match your search.</p>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <p>© 2026 <span>Operations Observability Portal</span> · Built with Spring Boot + Thymeleaf · DevOps: Jenkins → Docker → Kubernetes</p>
+</footer>
+
+<script src="/js/script.js"></script>
+<script>
+(function () {
+    // Count services
+    var rows = document.querySelectorAll('.service-row');
+    document.getElementById('service-count').textContent = '(' + rows.length + ' services)';
+
+    // Dynamic filtering function
+    window.filterServices = function(q) {
+        q = q.trim().toLowerCase();
+        var count = 0;
+        rows.forEach(function(row) {
+            var name = row.querySelector('.service-name').textContent.toLowerCase();
+            var status = row.querySelector('.status-badge').textContent.toLowerCase();
+            var match = name.includes(q) || status.includes(q);
+            row.style.display = match ? '' : 'none';
+            if (match) count++;
+        });
+        document.getElementById('services-empty').style.display = count === 0 ? 'block' : 'none';
+    };
+
+    // ── Theme Toggle ───────────────────────────────
+    var savedTheme = localStorage.getItem('hr-theme') || 'dark';
+    if (savedTheme === 'light') applyLightTheme();
+    window.toggleTheme = function () {
+        savedTheme = savedTheme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('hr-theme', savedTheme);
+        savedTheme === 'light' ? applyLightTheme() : applyDarkTheme();
+    };
+    function applyLightTheme() {
+        document.documentElement.style.setProperty('--clr-bg',       '#f0f4f8');
+        document.documentElement.style.setProperty('--clr-bg-2',     '#ffffff');
+        document.documentElement.style.setProperty('--clr-surface',  'rgba(0,0,0,0.03)');
+        document.documentElement.style.setProperty('--clr-surface-hover', 'rgba(0,0,0,0.06)');
+        document.documentElement.style.setProperty('--clr-border',   'rgba(0,0,0,0.1)');
+        document.documentElement.style.setProperty('--clr-border-hover', 'rgba(59,130,246,0.4)');
+        document.documentElement.style.setProperty('--clr-text',     '#1e293b');
+        document.documentElement.style.setProperty('--clr-text-muted','#475569');
+        document.documentElement.style.setProperty('--clr-text-faint','#94a3b8');
+        document.getElementById('theme-toggle').textContent = '☀️';
+    }
+    function applyDarkTheme() {
+        document.documentElement.style.setProperty('--clr-bg',       '#0a0e1a');
+        document.documentElement.style.setProperty('--clr-bg-2',     '#0f1526');
+        document.documentElement.style.setProperty('--clr-surface',  'rgba(255,255,255,0.04)');
+        document.documentElement.style.setProperty('--clr-surface-hover', 'rgba(255,255,255,0.08)');
+        document.documentElement.style.setProperty('--clr-border',   'rgba(255,255,255,0.08)');
+        document.documentElement.style.setProperty('--clr-border-hover', 'rgba(99,179,237,0.4)');
+        document.documentElement.style.setProperty('--clr-text',     '#e2e8f0');
+        document.documentElement.style.setProperty('--clr-text-muted','#94a3b8');
+        document.documentElement.style.setProperty('--clr-text-faint','#475569');
+        document.getElementById('theme-toggle').textContent = '🌙';
+    }
+})();
+</script>
+</body>
+</html>
