@@ -1,7 +1,10 @@
 package com.example.hr_portal.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.springframework.stereotype.Service;
 
 import com.example.hr_portal.model.ServiceStatusInfo;
@@ -15,26 +18,128 @@ import com.example.hr_portal.config.MetricTrackingFilter;
 public class PortalService {
 
     private final List<SupportRequest> supportRequests = new CopyOnWriteArrayList<>();
+    private final AtomicInteger requestIdSequence = new AtomicInteger(1000);
+
+    public PortalService() {
+        seedInitialSupportRequests();
+    }
+
+    private void seedInitialSupportRequests() {
+        SupportRequest r1 = new SupportRequest(
+            generateNextId(),
+            "Sarah Jenkins",
+            "sarah.j@company.com",
+            "incident",
+            "P1 - Critical",
+            "Open",
+            "VPN authentication fails intermittently during peak hours (10 AM - 12 PM).",
+            LocalDateTime.now().minusHours(3)
+        );
+
+        SupportRequest r2 = new SupportRequest(
+            generateNextId(),
+            "Alex Rivera",
+            "arivera@company.com",
+            "infra",
+            "P2 - High",
+            "In Progress",
+            "Requesting CPU & memory allocation increase for staging Kubernetes namespace.",
+            LocalDateTime.now().minusHours(18)
+        );
+
+        SupportRequest r3 = new SupportRequest(
+            generateNextId(),
+            "DevOps Alert System",
+            "alerts@company.com",
+            "incident",
+            "P2 - High",
+            "Open",
+            "Elevated response latency observed on API Gateway endpoint (>450ms).",
+            LocalDateTime.now().minusMinutes(45)
+        );
+
+        SupportRequest r4 = new SupportRequest(
+            generateNextId(),
+            "Elena Rostova",
+            "elena.r@company.com",
+            "security",
+            "P3 - Low",
+            "Resolved",
+            "Access role provisioning for new SRE team member complete.",
+            LocalDateTime.now().minusDays(1)
+        );
+        r4.setResolutionNotes("Granted SRE-Readonly Kubernetes role and Grafana viewer permissions.");
+
+        supportRequests.add(r1);
+        supportRequests.add(r2);
+        supportRequests.add(r3);
+        supportRequests.add(r4);
+    }
+
+    public String generateNextId() {
+        return "REQ-" + requestIdSequence.incrementAndGet();
+    }
 
     public void saveSupportRequest(SupportRequest request) {
-        supportRequests.add(request);
+        if (request.getId() == null || request.getId().isBlank()) {
+            request.setId(generateNextId());
+        }
+        if (request.getStatus() == null || request.getStatus().isBlank()) {
+            request.setStatus("Open");
+        }
+        if (request.getPriority() == null || request.getPriority().isBlank()) {
+            request.setPriority("P2 - Normal");
+        }
+        if (request.getSubmittedAt() == null) {
+            request.setSubmittedAt(LocalDateTime.now());
+        }
+        supportRequests.add(0, request); // newest top
     }
 
     public List<SupportRequest> getSupportRequests() {
         return List.copyOf(supportRequests);
     }
 
+    public Optional<SupportRequest> getSupportRequestById(String id) {
+        return supportRequests.stream()
+                .filter(r -> r.getId().equalsIgnoreCase(id))
+                .findFirst();
+    }
+
+    public boolean updateSupportRequestStatus(String id, String newStatus, String notes) {
+        Optional<SupportRequest> optReq = getSupportRequestById(id);
+        if (optReq.isPresent()) {
+            SupportRequest req = optReq.get();
+            req.setStatus(newStatus);
+            if (notes != null && !notes.isBlank()) {
+                req.setResolutionNotes(notes);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public long getOpenSupportRequestsCount() {
+        return supportRequests.stream()
+                .filter(r -> "Open".equalsIgnoreCase(r.getStatus()) || "In Progress".equalsIgnoreCase(r.getStatus()))
+                .count();
+    }
+
+    public long getResolvedSupportRequestsCount() {
+        return supportRequests.stream()
+                .filter(r -> "Resolved".equalsIgnoreCase(r.getStatus()))
+                .count();
+    }
+
     private ServiceStatusInfo checkService(String serviceName, String host, int port, String defaultUrl) {
         long start = System.currentTimeMillis();
         boolean up = false;
         try {
-            // Check if socket is open with short timeout
             try (java.net.Socket socket = new java.net.Socket()) {
-                socket.connect(new java.net.InetSocketAddress(host, port), 600); // 600ms timeout
+                socket.connect(new java.net.InetSocketAddress(host, port), 600);
                 up = true;
             }
         } catch (Exception e) {
-            // Fallback to checking public URL if socket failed
             if (defaultUrl != null) {
                 try {
                     java.net.URL url = new java.net.URL(defaultUrl);
@@ -59,18 +164,12 @@ public class PortalService {
     }
 
     public List<ServiceStatusInfo> getServices() {
-        // Employee Portal is the app itself
         long selfLatency = MetricTrackingFilter.getAverageResponseTime();
         ServiceStatusInfo selfStatus = new ServiceStatusInfo("Employee Portal", "UP", selfLatency + " ms", "1 min ago");
 
-        // Real-time checks
         ServiceStatusInfo jenkinsStatus = checkService("Jenkins", "localhost", 8080, null);
         ServiceStatusInfo gitStatus = checkService("Git Repository", "github.com", 443, "https://github.com");
-        
-        // VPN Gateway (designed to fail/timeout)
         ServiceStatusInfo vpnStatus = checkService("VPN Gateway", "10.255.255.1", 443, null);
-        
-        // Email Service
         ServiceStatusInfo emailStatus = checkService("Email Service", "smtp.gmail.com", 587, null);
 
         return List.of(selfStatus, jenkinsStatus, gitStatus, vpnStatus, emailStatus);
@@ -93,7 +192,6 @@ public class PortalService {
     }
 
     public List<MetricDetail> getMetrics() {
-        // 1. CPU Load Calculation
         int cpuVal = 12;
         try {
             var osBean = java.lang.management.ManagementFactory.getPlatformMXBean(
@@ -107,7 +205,6 @@ public class PortalService {
             // Ignore
         }
 
-        // 2. Memory Utilization
         int memVal = 45;
         try {
             long total = Runtime.getRuntime().totalMemory();
@@ -118,19 +215,16 @@ public class PortalService {
             // Ignore
         }
 
-        // 3. Request Rate (Requests per minute based on application uptime)
         long uptimeMs = java.lang.management.ManagementFactory.getRuntimeMXBean().getUptime();
         double minutes = uptimeMs / 60000.0;
         long totalRequests = MetricTrackingFilter.getTotalRequests();
         int rate = (minutes < 0.1) ? (int) totalRequests : (int) (totalRequests / minutes);
         if (rate == 0) {
-            rate = (int) totalRequests + 2; // base simulated traffic activity if fresh start
+            rate = (int) totalRequests + 2;
         }
 
-        // 4. Response Time from tracking filter
         long avgResponseTime = MetricTrackingFilter.getAverageResponseTime();
 
-        // 5. Pod replicas count (detecting hostname)
         String envHost = System.getenv("HOSTNAME");
         int podCount = (envHost != null && envHost.startsWith("hr-portal-")) ? 2 : 1;
 

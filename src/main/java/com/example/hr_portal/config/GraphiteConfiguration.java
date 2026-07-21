@@ -19,13 +19,14 @@ public class GraphiteConfiguration {
     @Value("${management.metrics.export.graphite.port:2003}")
     private int graphitePort;
 
+    @Value("${management.metrics.export.graphite.enabled:false}")
+    private boolean graphiteEnabled;
+
     private String resolveHost() {
         try {
             java.net.InetAddress.getByName(graphiteHost);
             return graphiteHost;
         } catch (java.net.UnknownHostException e) {
-            // If the application is run locally outside of docker network, "graphite" cannot be resolved.
-            // Fall back to "localhost" to route metrics to Docker exposed port 2003 on host machine.
             return "localhost";
         }
     }
@@ -62,7 +63,7 @@ public class GraphiteConfiguration {
 
             @Override
             public boolean enabled() {
-                return true;
+                return graphiteEnabled;
             }
 
             @Override

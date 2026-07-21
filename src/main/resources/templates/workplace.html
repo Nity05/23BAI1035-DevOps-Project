@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Employee workplace hub for leave, meeting rooms, policies and office services.">
+    <title>Workplace Hub</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header>
+    <div class="header-inner">
+        <div class="header-badge">Employee workspace</div>
+        <h1>Your workplace, in one place</h1>
+        <p>Plan your day, manage common requests, and stay connected to the office.</p>
+        <div class="header-clock" id="hr-clock">Loading...</div>
+    </div>
+</header>
+
+<nav>
+    <a href="/workplace" class="active">Workplace</a>
+    <a href="/">🏠 Home</a>
+    <a href="/dashboard">📊 Ops Dashboard</a>
+    <a href="/support-requests">🎫 Support Queue</a>
+    <a href="/services">🖥️ Services</a>
+    <a href="/maintenance">🔧 Maintenance</a>
+    <a href="/incidents">🚨 Incidents</a>
+    <a href="/contact">📞 Contact</a>
+</nav>
+
+<main>
+    <section class="workplace-welcome scroll-reveal">
+        <div>
+            <span class="office-kicker">Monday, 19 July</span>
+            <h2>Good morning, Nithish</h2>
+            <p>Here is what needs your attention today.</p>
+        </div>
+        <div class="presence-control">
+            <span class="presence-dot"></span>
+            <div><strong>Working from office</strong><small>Update your availability</small></div>
+            <select id="presence-status" aria-label="Workplace availability">
+                <option>Working from office</option>
+                <option>Working remotely</option>
+                <option>Out of office</option>
+            </select>
+        </div>
+    </section>
+
+    <section class="workplace-stats scroll-reveal" aria-label="Employee overview">
+        <article><span class="stat-label">Leave balance</span><strong>14.5 days</strong><small>Annual leave remaining</small></article>
+        <article><span class="stat-label">Next meeting</span><strong>10:30 AM</strong><small>Weekly delivery sync · Cedar</small></article>
+        <article><span class="stat-label">Open requests</span><strong id="request-count">0</strong><small>Tracked on this device</small></article>
+        <article><span class="stat-label">Office notices</span><strong>2</strong><small>One requires acknowledgement</small></article>
+    </section>
+
+    <section class="workplace-grid">
+        <article class="panel scroll-reveal">
+            <div class="office-panel-header">
+                <div><span class="office-kicker">People operations</span><h2>Request time away</h2></div>
+                <span class="office-pill">Self-service</span>
+            </div>
+            <form id="leave-form" class="workspace-form">
+                <label>Leave type<select name="type" required><option value="Annual leave">Annual leave</option><option value="Sick leave">Sick leave</option><option value="Work from home">Work from home</option></select></label>
+                <div class="form-row"><label>From<input name="from" type="date" required></label><label>To<input name="to" type="date" required></label></div>
+                <label>Note (optional)<input name="note" type="text" placeholder="Add a short note for your manager"></label>
+                <button class="btn btn-primary" type="submit">Submit request</button>
+            </form>
+        </article>
+
+        <article class="panel scroll-reveal">
+            <div class="office-panel-header">
+                <div><span class="office-kicker">Facilities</span><h2>Book a meeting room</h2></div>
+                <span class="office-pill warn">Today</span>
+            </div>
+            <form id="room-form" class="workspace-form">
+                <label>Room<select name="room" required><option value="Cedar · 8 seats">Cedar · 8 seats</option><option value="Orchid · 4 seats">Orchid · 4 seats</option><option value="Summit · 12 seats">Summit · 12 seats</option></select></label>
+                <div class="form-row"><label>Time<input name="time" type="time" required></label><label>Duration<select name="duration"><option>30 minutes</option><option>1 hour</option><option>90 minutes</option></select></label></div>
+                <label>Meeting title<input name="title" type="text" required placeholder="e.g. Project review"></label>
+                <button class="btn btn-primary" type="submit">Reserve room</button>
+            </form>
+        </article>
+
+        <article class="panel scroll-reveal workplace-wide">
+            <div class="office-panel-header"><div><span class="office-kicker">Office updates</span><h2>Announcements</h2></div><a href="/contact" class="text-link">Contact HR</a></div>
+            <div class="announcement-list">
+                <div><span class="announcement-date">19 JUL</span><div><strong>Town hall: Q3 goals and team priorities</strong><p>Join the all-hands meeting this Friday at 4:00 PM in Summit or online.</p></div><button class="ack-button" data-notice="town-hall">Acknowledge</button></div>
+                <div><span class="announcement-date">18 JUL</span><div><strong>New travel and expense policy is available</strong><p>Please review the updated limits before making your next business booking.</p></div><a class="text-link" href="#policy-resources">View policy</a></div>
+            </div>
+        </article>
+
+        <aside class="panel scroll-reveal">
+            <div class="office-panel-header"><div><span class="office-kicker">Shortcuts</span><h2>Popular tools</h2></div></div>
+            <div class="tool-list">
+                <a href="/contact">IT &amp; access request <span>→</span></a>
+                <a href="/contact">Payroll &amp; HR help <span>→</span></a>
+                <a href="/services">Service availability <span>→</span></a>
+                <a href="/maintenance">Planned maintenance <span>→</span></a>
+            </div>
+        </aside>
+    </section>
+
+    <section class="panel scroll-reveal" id="policy-resources">
+        <div class="office-panel-header"><div><span class="office-kicker">Resources</span><h2>Company essentials</h2></div></div>
+        <div class="resource-grid">
+            <a href="/contact"><strong>Employee handbook</strong><span>Guidelines, benefits and conduct</span></a>
+            <a href="/contact"><strong>Expense policy</strong><span>Claims, limits and approvals</span></a>
+            <a href="/contact"><strong>Security guide</strong><span>Keep your account and data safe</span></a>
+            <a href="/contact"><strong>New starter checklist</strong><span>Everything needed for onboarding</span></a>
+        </div>
+    </section>
+</main>
+
+<footer><p>© 2026 <span>Workplace Hub</span> · Internal employee services</p></footer>
+<script src="/js/script.js"></script>
+<script>
+(() => {
+  const storageKey = 'workplace-requests';
+  const getRequests = () => JSON.parse(localStorage.getItem(storageKey) || '[]');
+  const updateCount = () => document.getElementById('request-count').textContent = getRequests().length;
+  const showMessage = (message) => { const item = document.createElement('div'); item.className = 'workspace-message'; item.textContent = message; document.body.appendChild(item); setTimeout(() => item.remove(), 3500); };
+  const persist = (kind, form) => { const items = getRequests(); items.push({ kind, submittedAt: new Date().toISOString(), details: Object.fromEntries(new FormData(form)) }); localStorage.setItem(storageKey, JSON.stringify(items)); updateCount(); form.reset(); };
+  document.getElementById('leave-form').addEventListener('submit', event => { event.preventDefault(); persist('Leave request', event.currentTarget); showMessage('Leave request saved and ready for manager review.'); });
+  document.getElementById('room-form').addEventListener('submit', event => { event.preventDefault(); persist('Room reservation', event.currentTarget); showMessage('Room reservation has been added to your requests.'); });
+  document.getElementById('presence-status').addEventListener('change', event => { localStorage.setItem('workplace-presence', event.target.value); showMessage('Availability updated to ' + event.target.value + '.'); });
+  document.getElementById('presence-status').value = localStorage.getItem('workplace-presence') || 'Working from office';
+  document.querySelectorAll('.ack-button').forEach(button => button.addEventListener('click', () => { button.textContent = 'Acknowledged'; button.disabled = true; localStorage.setItem('notice-' + button.dataset.notice, 'acknowledged'); }));
+  updateCount();
+})();
+</script>
+</body>
+</html>

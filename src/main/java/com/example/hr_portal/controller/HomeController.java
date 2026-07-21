@@ -1,18 +1,24 @@
 package com.example.hr_portal.controller;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.http.HttpStatus;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.example.hr_portal.model.MetricDetail;
 import com.example.hr_portal.model.SupportRequest;
 import com.example.hr_portal.service.PortalService;
+import com.example.hr_portal.config.MetricTrackingFilter;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -69,8 +75,72 @@ public class HomeController {
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
-        model.addAttribute("metrics", portalService.getMetrics());
+        var services = portalService.getServices();
+        var metrics = portalService.getMetrics();
+        var supportRequests = portalService.getSupportRequests();
+        var incidents = portalService.getIncidents();
+
+        long upServices = services.stream().filter(s -> "UP".equalsIgnoreCase(s.getStatus())).count();
+        long downServices = services.stream().filter(s -> "DOWN".equalsIgnoreCase(s.getStatus())).count();
+        long openTickets = portalService.getOpenSupportRequestsCount();
+        long resolvedTickets = portalService.getResolvedSupportRequestsCount();
+
+        double errorRate = downServices > 0 ? ((double) downServices / services.size()) * 100.0 : 0.0;
+        String formattedErrorRate = String.format(Locale.US, "%.1f%%", errorRate);
+
+        model.addAttribute("metrics", metrics);
+        model.addAttribute("services", services);
+        model.addAttribute("supportRequests", supportRequests);
+        model.addAttribute("incidents", incidents);
+        model.addAttribute("upServicesCount", upServices);
+        model.addAttribute("downServicesCount", downServices);
+        model.addAttribute("openTicketsCount", openTickets);
+        model.addAttribute("resolvedTicketsCount", resolvedTickets);
+        model.addAttribute("errorRate", formattedErrorRate);
+        model.addAttribute("avgLatency", MetricTrackingFilter.getAverageResponseTime() + " ms");
+        model.addAttribute("totalRequests", MetricTrackingFilter.getTotalRequests());
+
         return "dashboard";
+    }
+
+    @GetMapping("/support-requests")
+    public String supportRequests(Model model) {
+        model.addAttribute("supportRequests", portalService.getSupportRequests());
+        model.addAttribute("openCount", portalService.getOpenSupportRequestsCount());
+        model.addAttribute("resolvedCount", portalService.getResolvedSupportRequestsCount());
+        return "support-requests";
+    }
+
+    @GetMapping("/support-requests/{id}")
+    public String supportRequestDetail(@PathVariable("id") String id, Model model) {
+        SupportRequest supportRequest = portalService.getSupportRequestById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Support request not found"));
+        model.addAttribute("supportRequest", supportRequest);
+        return "support-request-detail";
+    }
+
+    @PostMapping("/support-requests/{id}/status")
+    public String updateSupportRequestStatus(
+            @PathVariable("id") String id,
+            @RequestParam("status") String status,
+            @RequestParam(value = "notes", required = false) String notes,
+            RedirectAttributes redirectAttributes) {
+
+        if (!java.util.Set.of("Open", "In Progress", "Resolved").contains(status)) {
+            redirectAttributes.addFlashAttribute("ticketError", "Invalid support request status.");
+            return "redirect:/support-requests/" + id;
+        }
+
+        if (!portalService.updateSupportRequestStatus(id, status, notes)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Support request not found");
+        }
+        redirectAttributes.addFlashAttribute("ticketSuccess", "Status of ticket " + id + " updated to " + status);
+        return "redirect:/support-requests/" + id;
+    }
+
+    @GetMapping("/workplace")
+    public String workplace() {
+        return "workplace";
     }
 
     @GetMapping("/maintenance")
@@ -87,7 +157,6 @@ public class HomeController {
 
     @GetMapping("/contact")
     public String contact(Model model) {
-        // Provide a blank form object for Thymeleaf binding
         if (!model.containsAttribute("supportRequest")) {
             model.addAttribute("supportRequest", new SupportRequest());
         }
@@ -105,16 +174,17 @@ public class HomeController {
             return "redirect:/contact";
         }
 
-        // ── Record metric to Micrometer (pushed to Graphite) ─────────────
-        // Metric name in Graphite: hr_portal.support.requests.submitted
-        // Tagged by category so you can chart breakdowns per request type
         String category = (request.getCategory() == null || request.getCategory().isBlank())
                 ? "general" : request.getCategory();
         var metricsAtSubmission = portalService.getMetrics();
 
         request.setCategory(category);
+        if (request.getPriority() == null || request.getPriority().isBlank()) {
+            request.setPriority("incident".equals(category) ? "P1 - Critical" : "P2 - Normal");
+        }
         request.setSubmittedAt(LocalDateTime.now());
         request.setMetricsSnapshot(metricsAtSubmission);
+        
         portalService.saveSupportRequest(request);
 
         Counter.builder("support.requests.submitted")
@@ -123,19 +193,17 @@ public class HomeController {
                 .register(meterRegistry)
                 .increment();
 
-        // Log to console for verification during development
         String metricsSummary = metricsAtSubmission.stream()
                 .map(metric -> metric.getName() + "=" + metric.getValue() + " (" + metric.getStatus() + ")")
                 .collect(Collectors.joining(", "));
-        System.out.printf("[SupportRequest] submittedAt=%s | name=%s | email=%s | category=%s | message=%s | metrics=[%s]%n",
-                request.getSubmittedAt(), request.getName(), request.getEmail(), category, request.getMessage(), metricsSummary);
+        System.out.printf("[SupportRequest] ID=%s | submittedAt=%s | name=%s | email=%s | category=%s | message=%s | metrics=[%s]%n",
+                request.getId(), request.getSubmittedAt(), request.getName(), request.getEmail(), category, request.getMessage(), metricsSummary);
 
         redirectAttributes.addFlashAttribute("formSuccess",
-                "✅ Message sent successfully! The " + category + " team will get back to you.");
+                "✅ Ticket " + request.getId() + " created successfully! The " + category + " team will respond shortly.");
         return "redirect:/contact";
     }
 
-    // ── Helper ────────────────────────────────────────────────────────────
     private String findMetric(java.util.List<MetricDetail> metrics, String name, String fallback) {
         return metrics.stream()
                 .filter(m -> name.equals(m.getName()))

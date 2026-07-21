@@ -1,17 +1,30 @@
 version: '3.8'
 
 services:
-  graphite:
-    image: graphiteapp/graphite-statsd:latest
-    container_name: graphite
+  hr-portal:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hr-portal
     ports:
-      - "8082:80"
-      - "2003:2003"
-      - "2004:2004"
-      - "8125:8125/udp"
+      - "9090:9090"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED=true
     restart: unless-stopped
+    networks:
+      - monitoring
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9091:9090"
     volumes:
-    - ./monitoring/graphite/storage:/opt/graphite/storage
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - hr-portal
+    restart: unless-stopped
     networks:
       - monitoring
 
@@ -20,24 +33,16 @@ services:
     container_name: grafana
     ports:
       - "3000:3000"
-    depends_on:
-      - graphite
-    restart: unless-stopped
-    networks:
-      - monitoring
-
-  nagios:
-    image: jasonrivers/nagios:latest
-    container_name: nagios
-    ports:
-      - "8083:80"
-    cap_add:
-      - NET_RAW
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
-      - ./monitoring/nagios:/opt/nagios/etc/conf.d
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
     networks:
       - monitoring
 

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Support Request Triage Queue — DevOps Ops Platform ticket queue management">
+    <title>Support Request Queue</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- Theme Toggle -->
+<button id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode"
+        style="position:fixed;top:14px;right:72px;z-index:9998;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">🌙</button>
+
+<header>
+    <div class="header-inner">
+        <div class="header-badge">🎫 Ticket Operations Queue</div>
+        <h1>Support &amp; Incident Triage</h1>
+        <p>Review, prioritize, and update support request statuses connected with real-time operational metrics</p>
+        <div class="header-clock" id="hr-clock">Loading…</div>
+    </div>
+</header>
+
+<nav>
+    <a href="/workplace">Workplace</a>
+    <a href="/">🏠 Home</a>
+    <a href="/dashboard">📊 Ops Dashboard</a>
+    <a href="/support-requests" class="active">🎫 Support Queue</a>
+    <a href="/services">🖥️ Services</a>
+    <a href="/maintenance">🔧 Maintenance</a>
+    <a href="/incidents">🚨 Incidents</a>
+    <a href="/contact">📞 Contact</a>
+</nav>
+
+<main>
+    <div class="page-title scroll-reveal">
+        <h2>🎫 Operational Support Requests Queue</h2>
+        <p>Manage tickets, view metric snapshots taken at submission, and transition request states</p>
+    </div>
+
+    <!-- Triage Metrics Banner -->
+    <div class="ops-dashboard-grid scroll-reveal">
+        <div class="ops-metric-card">
+            <span style="font-size:0.75rem;color:var(--clr-text-muted);text-transform:uppercase;font-weight:600;">Total Support Requests</span>
+            <div class="ops-metric-val" th:text="${supportRequests.size()}">4</div>
+        </div>
+        <div class="ops-metric-card">
+            <span style="font-size:0.75rem;color:var(--clr-text-muted);text-transform:uppercase;font-weight:600;">Open / In-Progress</span>
+            <div class="ops-metric-val" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;" th:text="${openCount}">3</div>
+        </div>
+        <div class="ops-metric-card">
+            <span style="font-size:0.75rem;color:var(--clr-text-muted);text-transform:uppercase;font-weight:600;">Resolved Tickets</span>
+            <div class="ops-metric-val" style="background:linear-gradient(135deg,#34d399,#10b981);-webkit-background-clip:text;-webkit-text-fill-color:transparent;" th:text="${resolvedCount}">1</div>
+        </div>
+    </div>
+
+    <section class="panel scroll-reveal">
+        <h2><span class="panel-icon">📋</span> Active Support Tickets &amp; Incidents Queue</h2>
+        <div style="overflow-x:auto;">
+            <table class="ops-ticket-table">
+                <thead>
+                    <tr>
+                        <th>Ticket ID</th>
+                        <th>Requester</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Message</th>
+                        <th>Submitted At</th>
+                        <th>Status</th>
+                        <th>Change Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="req : ${supportRequests}">
+                        <td><a th:href="@{/support-requests/{id}(id=${req.id})}" th:text="${req.id}">REQ-1001</a></td>
+                        <td>
+                            <strong th:text="${req.name}">John Doe</strong><br>
+                            <small style="color:var(--clr-text-faint);" th:text="${req.email}">john@company.com</small>
+                        </td>
+                        <td>
+                            <span style="text-transform:capitalize;" th:text="${req.category}">incident</span>
+                        </td>
+                        <td>
+                            <span th:class="'ops-pill ' + (${req.priority != null and req.priority.contains('P1')} ? 'p1' : (${req.priority != null and req.priority.contains('P2')} ? 'p2' : 'p3'))"
+                                  th:text="${req.priority}">P1 - Critical</span>
+                        </td>
+                        <td>
+                            <div style="max-width:320px;font-size:0.86rem;color:var(--clr-text);" th:text="${req.message}">
+                                Ticket message content
+                            </div>
+                            <div th:if="${req.resolutionNotes != null}" style="margin-top:6px;font-size:0.78rem;color:#34d399;background:rgba(16,185,129,0.08);padding:4px 8px;border-radius:6px;">
+                                💡 Notes: <span th:text="${req.resolutionNotes}">Resolution notes</span>
+                            </div>
+                        </td>
+                        <td th:text="${req.formattedSubmittedAt}">Just now</td>
+                        <td>
+                            <span th:class="'ops-pill ' + (${req.status == 'Open'} ? 'open' : (${req.status == 'In Progress'} ? 'in-progress' : 'resolved'))"
+                                  th:text="${req.status}">Open</span>
+                        </td>
+                        <td>
+                            <form th:action="@{'/support-requests/' + ${req.id} + '/status'}" method="post" class="status-select-form">
+                                <select name="status">
+                                    <option value="Open" th:selected="${req.status == 'Open'}">Open</option>
+                                    <option value="In Progress" th:selected="${req.status == 'In Progress'}">In Progress</option>
+                                    <option value="Resolved" th:selected="${req.status == 'Resolved'}">Resolved</option>
+                                </select>
+                                <button type="submit">Save</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <p>© 2026 <span>DevOps Cloud Reliability Platform</span> · Built with Spring Boot + Thymeleaf</p>
+</footer>
+
+<script src="/js/script.js"></script>
+</body>
+</html>

@@ -3,10 +3,14 @@ kind: Deployment
 
 metadata:
   name: hr-portal
+  namespace: default
+  labels:
+    app: hr-portal
+    tier: application
+    component: cloud-reliability-platform
 
 spec:
   replicas: 2
-
   selector:
     matchLabels:
       app: hr-portal
@@ -15,17 +19,39 @@ spec:
     metadata:
       labels:
         app: hr-portal
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/actuator/prometheus"
 
     spec:
-      hostAliases:
-        - ip: "192.168.1.7"   # Replace with the IP returned by: ping host.docker.internal
-          hostnames:
-            - "host.docker.internal"
-
       containers:
         - name: hr-portal
           image: hr-portal:latest
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
 
           ports:
             - containerPort: 9090
+              name: http-actuator
+
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 9090
+            initialDelaySeconds: 25
+            periodSeconds: 15
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 9090
+            initialDelaySeconds: 20
+            periodSeconds: 10

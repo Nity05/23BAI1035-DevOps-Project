@@ -1,0 +1,18 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'hr-portal'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['hr-portal:9090']
+        labels:
+          application: 'hr_portal'
+          environment: 'production'
+          service: 'cloud-reliability-platform'
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

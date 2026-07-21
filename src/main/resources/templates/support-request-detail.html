@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Request Detail</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header>
+    <div class="header-inner">
+        <div class="header-badge">Support request detail</div>
+        <h1 th:text="${supportRequest.id}">REQ-1001</h1>
+        <p>Ticket context, current status, and the metric snapshot captured at submission.</p>
+    </div>
+</header>
+<nav>
+    <a href="/dashboard">Ops Dashboard</a>
+    <a href="/support-requests" class="active">Support Queue</a>
+    <a href="/contact">New Request</a>
+</nav>
+<main>
+    <div th:if="${ticketSuccess}" class="panel" th:text="${ticketSuccess}">Status updated.</div>
+    <div th:if="${ticketError}" class="panel" th:text="${ticketError}">Invalid status.</div>
+    <section class="panel">
+        <h2>Request details</h2>
+        <p><strong>Requester:</strong> <span th:text="${supportRequest.name}">Name</span> &lt;<span th:text="${supportRequest.email}">email</span>&gt;</p>
+        <p><strong>Category:</strong> <span th:text="${supportRequest.category}">incident</span></p>
+        <p><strong>Priority:</strong> <span th:text="${supportRequest.priority}">P2 - High</span></p>
+        <p><strong>Submitted:</strong> <span th:text="${supportRequest.formattedSubmittedAt}">Just now</span></p>
+        <p><strong>Request:</strong></p>
+        <p th:text="${supportRequest.message}">Request description</p>
+        <p th:if="${supportRequest.resolutionNotes != null}"><strong>Resolution notes:</strong> <span th:text="${supportRequest.resolutionNotes}">Notes</span></p>
+    </section>
+    <section class="panel">
+        <h2>Lifecycle</h2>
+        <form th:action="@{/support-requests/{id}/status(id=${supportRequest.id})}" method="post" class="status-select-form">
+            <label for="status">Current status</label>
+            <select id="status" name="status">
+                <option value="Open" th:selected="${supportRequest.status == 'Open'}">Open</option>
+                <option value="In Progress" th:selected="${supportRequest.status == 'In Progress'}">In Progress</option>
+                <option value="Resolved" th:selected="${supportRequest.status == 'Resolved'}">Resolved</option>
+            </select>
+            <label for="notes">Resolution notes</label>
+            <textarea id="notes" name="notes" rows="3" placeholder="Optional handoff or resolution notes"></textarea>
+            <button type="submit">Update ticket</button>
+        </form>
+    </section>
+    <section class="panel">
+        <h2>Metrics at submission</h2>
+        <div class="ops-dashboard-grid">
+            <div class="ops-metric-card" th:each="metric : ${supportRequest.metricsSnapshot}">
+                <span th:text="${metric.name}">CPU Usage</span>
+                <div class="ops-metric-val" th:text="${metric.value}">12%</div>
+                <small th:text="${metric.status}">Healthy</small>
+            </div>
+        </div>
+        <p th:if="${supportRequest.metricsSnapshot.isEmpty()}">No metric snapshot was recorded for this seeded request.</p>
+    </section>
+</main>
+<footer><p>DevOps Cloud Reliability Platform</p></footer>
+</body>
+</html>

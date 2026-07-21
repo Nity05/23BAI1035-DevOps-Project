@@ -3,6 +3,10 @@ kind: Service
 
 metadata:
   name: hr-portal-service
+  namespace: default
+  labels:
+    app: hr-portal
+    component: cloud-reliability-platform
 
 spec:
   type: NodePort
@@ -11,14 +15,14 @@ spec:
     app: hr-portal
 
   ports:
-    - name: app
-      protocol: TCP
-      port: 8081
-      targetPort: 9090
-      nodePort: 30081
-
-    - name: actuator
+    - name: http
       protocol: TCP
       port: 9090
       targetPort: 9090
       nodePort: 30090
+
+    - name: app-alt
+      protocol: TCP
+      port: 8081
+      targetPort: 9090
+      nodePort: 30081
