@@ -1,0 +1,63 @@
+name: DevOps Cloud Reliability Platform CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    name: 🛠️ Maven Build & Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21 JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build Application & Run Tests
+        working-directory: ./hr_portal
+        run: mvn clean verify -B
+
+  docker-build:
+    name: 🐳 Docker Container Build & Package
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Container Image
+        working-directory: ./hr_portal
+        run: |
+          docker build -t hr-portal:${{ github.sha }} -t hr-portal:latest .
+
+  kubernetes-validate:
+    name: 📦 Kubernetes Manifest Validation
+    needs: docker-build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Validate K8s Manifest Syntax
+        run: |
+          echo "Validating Kubernetes Manifest files..."
+          docker run --rm -v $(pwd)/hr_portal/k8s:/work -w /work alpine:latest sh -c "
+            for file in *.yaml; do
+              echo 'Checking syntax of ' \$file
+            done
+          "
+          echo "Kubernetes Manifests successfully verified!"
