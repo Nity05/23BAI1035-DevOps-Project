@@ -28,28 +28,30 @@ A practical **Cloud Reliability Platform & Operations Dashboard** designed for D
 ## 🏗️ End-to-End Architecture Flow
 
 ```text
-Developer -> GitHub -> GitHub Actions CI/CD -> Docker image -> Kubernetes -> OpenTelemetry -> Prometheus -> Grafana -> Operations Dashboard
+Developer → GitHub → GitHub Actions → Docker Image → Kubernetes → OpenTelemetry → Prometheus → Grafana → Operations Dashboard
 ```
 
 ```mermaid
 flowchart TD
-    Dev[Developer] -->|Push Code| GH[GitHub Repository]
-    GH -->|Trigger Workflow| GHA[GitHub Actions CI/CD]
-    GHA -->|Package & Build| Docker[Docker Image]
-    Docker -->|Deploy Manifests| K8s[Kubernetes Cluster]
-    
-    subgraph K8sCluster[Kubernetes Cluster]
-        AppPod[hr-portal Pods]
-        OTel[OpenTelemetry SDK]
-        Actuator[/actuator/prometheus Endpoint]
-        AppPod --- OTel
-        AppPod --- Actuator
+    Dev["Developer"] -->|Push Code| GH["GitHub Repository"]
+    GH -->|Trigger Workflow| GHA["GitHub Actions CI/CD"]
+    GHA -->|Package & Build| Docker["Docker Image"]
+    Docker -->|Deploy Manifests| K8s["Kubernetes Cluster"]
+
+    subgraph K8sCluster["Kubernetes Cluster"]
+        AppPod["HR Portal Pods"]
+        OTel["OpenTelemetry SDK"]
+        Actuator["/actuator/prometheus"]
+
+        AppPod --> OTel
+        AppPod --> Actuator
     end
 
-    Prometheus[Prometheus Server] -->|Scrape metrics| Actuator
-    Grafana[Grafana Dashboard] -->|Query metrics| Prometheus
-    OpsUser[DevOps / Support Engineer] -->|Monitor & Triage| OpsDash[Operations Dashboard UI]
-    OpsDash -->|API Query| AppPod
+    Actuator -->|Scraped by| Prometheus["Prometheus Server"]
+    Prometheus -->|Query Metrics| Grafana["Grafana Dashboard"]
+
+    OpsUser["DevOps / Support Engineer"] -->|Monitor & Triage| OpsDash["Operations Dashboard UI"]
+    OpsDash -->|REST API Calls| AppPod
 ```
 
 ---
