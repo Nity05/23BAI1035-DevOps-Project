@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-and-test:
-    name: 🛠️ Maven Build & Unit Tests
+    name: Maven Build & Unit Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -18,16 +18,15 @@ jobs:
       - name: Set up Java 21 JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version: "21"
+          distribution: "temurin"
           cache: maven
 
       - name: Build Application & Run Tests
-        working-directory: ./hr_portal
         run: mvn clean verify -B
 
   docker-build:
-    name: 🐳 Docker Container Build & Package
+    name: Docker Container Build & Package
     needs: build-and-test
     runs-on: ubuntu-latest
 
@@ -39,12 +38,10 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build Docker Container Image
-        working-directory: ./hr_portal
-        run: |
-          docker build -t hr-portal:${{ github.sha }} -t hr-portal:latest .
+        run: docker build -t hr-portal:${{ github.sha }} -t hr-portal:latest .
 
   kubernetes-validate:
-    name: 📦 Kubernetes Manifest Validation
+    name: Kubernetes Manifest Validation
     needs: docker-build
     runs-on: ubuntu-latest
 
@@ -52,12 +49,11 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Validate K8s Manifest Syntax
+      - name: Validate Kubernetes YAML files
         run: |
-          echo "Validating Kubernetes Manifest files..."
-          docker run --rm -v $(pwd)/hr_portal/k8s:/work -w /work alpine:latest sh -c "
-            for file in *.yaml; do
-              echo 'Checking syntax of ' \$file
-            done
-          "
-          echo "Kubernetes Manifests successfully verified!"
+          test -d k8s
+          for file in k8s/*.yaml; do
+            echo "Checking $file"
+            grep -q "apiVersion:" "$file"
+            grep -q "kind:" "$file"
+          done
